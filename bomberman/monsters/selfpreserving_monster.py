@@ -18,7 +18,7 @@ class SelfPreservingMonster(MonsterEntity):
                     # Avoid out-of-bounds access
                     if ((self.y + dy >= 0) and (self.y + dy < wrld.height())):
                         # Is a character at this position?
-                        if (wrld.characters_at(self.x + dx, self.y + dy)):
+                        if (wrld.monsters_at(self.x + dx, self.y + dy)):
                             return (True, dx, dy)
         # Nothing found
         return (False, 0, 0)
