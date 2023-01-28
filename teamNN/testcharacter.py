@@ -75,43 +75,58 @@ class TestCharacter(CharacterEntity):
         # Nothing found
         return (False, 0, 0)
 
-    def weigh_moves(self,wrld,moves):
+    def chance_monster_value(self, wrld, monster_moves, move_x, move_y):
+        """
+        Takes in wrld, the list and probabilities of each monster move, and the move's x and y to figure out the value
+        of taking this move with respect to monster, not taking into account anything else
+        Returns a value, 0 if not a viable move (monster will kill us), above 0 if otherwise
+        monster moves is a (probability, x, y)
+        The higher the number is, the better for bomberman
+        """
+        value = 0
+        for mmove in monster_moves:
+            (dx, dy, dist_from_monster) = self.a_star(wrld, move_x, move_y, mmove[1], mmove[2])
+            if(dist_from_monster <= 2): # is this 1 or 2
+                value -= 2 * mmove[0] # TODO : Fine tune this value
+            value += dist_from_monster * mmove[0]
+        return value
+
+    def weigh_moves(self,wrld):
+        moves = self.look_for_empty_cell_character(wrld)
         dists_from_goal = [None] * len(moves)
-        dists_from_monsters = [None] * len(moves)
+        monster_chance_values = [None] * len(moves)
         (exit,exit_x,exit_y) = self.find_exit(wrld)
         monsters_at = self.find_monsters(wrld)
-        #look for empty cells around monster to generate possible monster moves
 
+        #look for empty cells around monster to generate possible monster moves
+        probability_moves = [[]] * len(monsters_at)
+        for monster in monsters_at:
+            monster_moves = self.look_for_empty_cell_monster(wrld,monster.x,monster.y)
+            for move in monster_moves: # 1 / len(monster_moves)
+                probability_moves[len(monsters_at)][move] = (1/len(monster_moves),move[0],move[1])
+        # Set probability of monster doing that move
 
         max_path_length = 0
         for move in moves:
+            index = moves.index(move)
+
             (dx, dy, path_length) = self.a_star(wrld, move[0], move[1], exit_x, exit_y)
             if max_path_length < path_length: max_path_length = path_length
-            dists_from_goal[moves.index(move)] = path_length
+            dists_from_goal[index] = path_length
+            monster_chance_values[index] = self.chance_monster_value(wrld,monster_moves,move[0],move[1])
 
-            min_monster_dist = 10
-
-            for monster in monsters_at: # TODO : change to using all possible monster positions
-                (dx, dy, dist_from_monster) = self.a_star(wrld, move[0], move[1], monster[0], monster[1])
-                if min_monster_dist > dist_from_monster: min_monster_dist = dist_from_monster
-
-                # TODO : Now guess what monster will do and weight the function with that, or create 2d array?
-
-            # Might need a dist from bomb, but not yet
-            dists_from_monsters[moves.index(move)] = min_monster_dist
 
 
         # TODO : Using stuff from above, use equation below to weigh the viable neighbors
         # (max_distance - distance + 1) * (distance_from_monster - 1)
         move_utilities = []
         for i in range(len(moves)):
-            # TODO : Add a weight to each move, probably with a new array
-            utility = (max_path_length - dists_from_goal[i] + 1) * (dists_from_monsters[i] -1)
+            # TODO : This definitely does not work, maybe have an external weight if we are super close to monter?
+            big_scalar = 10
+            utility = (max_path_length - dists_from_goal[i] + 1) * (monster_chance_values[i] * big_scalar)
             move_utilities.append(moves[i].x, moves[i].y, utility)
 
         return move_utilities
-
-    def generate_chance_node(self):
 
     def find_exit(self,wrld):
         for x in range(wrld.height):
@@ -128,7 +143,7 @@ class TestCharacter(CharacterEntity):
                      monsters.append((x, y))
         return monsters
 
-    def look_for_empty_cell(self, wrld):
+    def look_for_empty_cell_character(self, wrld):
         # List of empty cells
         cells = []
         # Go through neighboring cells
@@ -145,3 +160,22 @@ class TestCharacter(CharacterEntity):
                             cells.append((dx, dy))
         # All done
         return cells
+
+    def look_for_empty_cell_monster(self, wrld, monster_x, monster_y):
+        # List of empty cells
+        cells = []
+        # Go through neighboring cells
+        for dx in [-1, 0, 1]:
+            # Avoid out-of-bounds access
+            if ((monster_x + dx >= 0) and (monster_x + dx < wrld.width())):
+                for dy in [-1, 0, 1]:
+                    # Avoid out-of-bounds access
+                    if ((monster_y + dy >= 0) and (monster_y + dy < wrld.height())):
+                        # Is this cell safe?
+                        if(wrld.exit_at(monster_x + dx, monster_y + dy) or
+                           wrld.empty_at(monster_x + dx, monster_y + dy)):
+                            # Yes
+                            cells.append((dx, dy))
+        # All done
+        return cells
+
