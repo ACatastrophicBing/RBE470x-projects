@@ -27,7 +27,8 @@ class TestCharacter(CharacterEntity):
     def a_star(self,wrld,startingx,startingy,targetx,targety):
         start = (startingx, startingy)
         goal = (targetx, targety)
-        frontier = PriorityQueue(start,0)
+        frontier = PriorityQueue()
+        frontier.put(start,0)
         came_from = {}
         cost = {}
         came_from[start] = None
@@ -38,7 +39,7 @@ class TestCharacter(CharacterEntity):
 
             if current == goal:
                 break
-            neighbors = self.look_for_empty_cell_monster(wrld, current(0), current(1))
+            neighbors = self.look_for_empty_cell_monster(wrld, current[0], current[1])
             for n in neighbors:
                 n_cost = self.get_hypotnuse(current,n)
                 new_cost = cost[current] + 1
@@ -78,7 +79,7 @@ class TestCharacter(CharacterEntity):
     def get_hypotnuse(self,cell1,cell2):
 
         #takes 2 tuples (cell_x, cell_y) and calculates the distance between them
-        return math.hypot(abs(cell1(0)-cell2(0)), abs(cell1(1)-cell2(1)))
+        return math.hypot(abs(cell1[0]-cell2[0]), abs(cell1[1]-cell2[1]))
 
     def variant1_do(self,wrld):
 
