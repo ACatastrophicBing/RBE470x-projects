@@ -57,7 +57,7 @@ class TestCharacter(CharacterEntity):
             path.append(current_cell)
             current_cell = came_from[current_cell]
 
-        path = reversed(path)
+        path = list(reversed(path))
         return path
 
     def look_for_empty_cell(self, wrld):
@@ -88,8 +88,8 @@ class TestCharacter(CharacterEntity):
         (exit, exit_x, exit_y) = self.find_exit(wrld)
         if exit:
             path = self.a_star(wrld,self.x, self.y, exit_x, exit_y)
-            for step in path:
-                self.move(step[0] - self.x , step[1] - self.y)
+            step = path[1]
+            self.move(step[0] - self.x , step[1] - self.y)
         else:
             print("oh fuck there's no exit")
         pass
