@@ -20,7 +20,7 @@ class TestCharacter(CharacterEntity):
         super().__init__(name, avatar, x, y)
 
     def do(self, wrld):
-        # Your code here
+        self.variant1_do(wrld)
         pass
 
     # TODO : A* for a certain target in a given world from a certain position
@@ -84,9 +84,9 @@ class TestCharacter(CharacterEntity):
 
         (exit, exit_x, exit_y) = self.find_exit(wrld)
         if exit:
-            # do A*
-            (dx, dy) = self.a_star(wrld, )
-            self.move(dx, dy)
+            path = self.a_star(wrld,self.x, self.y, exit_x, exit_y)
+            for step in path:
+                self.move(step(0) - self.x , step(1) - self.y)
         else:
             print("oh fuck there's no exit")
         pass
