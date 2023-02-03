@@ -38,7 +38,7 @@ class TestCharacter(CharacterEntity):
 
             if current == goal:
                 break
-            neighbors = self.look_for_empty_cell(wrld)
+            neighbors = self.look_for_empty_cell_monster(wrld, current(0), current(1))
             for n in neighbors:
                 n_cost = self.get_hypotnuse(current,n)
                 new_cost = cost[current] + 1
