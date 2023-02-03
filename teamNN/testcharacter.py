@@ -100,7 +100,13 @@ class TestCharacter(CharacterEntity):
             # do expectimax using ex and ey for whatever is around
             pass
         else:
-            # do A*
+            (exit, exit_x, exit_y) = self.find_exit(wrld)
+            if exit:
+                path = self.a_star(wrld, self.x, self.y, exit_x, exit_y)
+                step = path[1]
+                self.move(step[0] - self.x, step[1] - self.y)
+            else:
+                print("oh fuck there's no exit")
             pass
         pass
 
