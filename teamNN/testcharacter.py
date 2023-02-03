@@ -120,7 +120,7 @@ class TestCharacter(CharacterEntity):
         for dx in range(-rnge, rnge + 1):
             # Avoid out-of-bounds access
             if ((self.x + dx >= 0) and (self.x + dx < wrld.width())):
-                for dy in range(-self.rnge, self.rnge + 1):
+                for dy in range(-rnge, rnge + 1):
                     # Avoid out-of-bounds access
                     if ((self.y + dy >= 0) and (self.y + dy < wrld.height())):
                         # Is a character at this position?
@@ -146,7 +146,7 @@ class TestCharacter(CharacterEntity):
         return value
 
     def expectimax(self, wrld):
-        possible_moves = self.weigh_moves(self,wrld)
+        possible_moves = self.weigh_moves(wrld)
         max = 0
         max_move = None
         for move in possible_moves:
@@ -175,7 +175,8 @@ class TestCharacter(CharacterEntity):
         for move in moves:
             index = moves.index(move)
 
-            (dx, dy, path_length) = self.a_star(wrld, move[0], move[1], exit_x, exit_y)
+            path = self.a_star(wrld, move[0], move[1], exit_x, exit_y)
+            path_length = len(path)
             if max_path_length < path_length: max_path_length = path_length
             dists_from_goal[index] = path_length
             monster_chance_values[index] = self.chance_monster_value(wrld,monster_moves,move[0],move[1])
@@ -202,8 +203,8 @@ class TestCharacter(CharacterEntity):
 
     def find_monsters(self,wrld):
         monsters = []
-        for x in range(wrld.height):
-            for y in range(wrld.width):
+        for x in range(wrld.height()):
+            for y in range(wrld.width()):
                 if wrld.monsters_at(x, y):
                      monsters.append((x, y))
         return monsters
