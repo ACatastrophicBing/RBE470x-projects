@@ -20,7 +20,7 @@ class TestCharacter(CharacterEntity):
         super().__init__(name, avatar, x, y)
 
     def do(self, wrld):
-        self.variant1_do(wrld)
+        self.variant2_do(wrld)
         pass
 
     # TODO : A* for a certain target in a given world from a certain position
@@ -41,7 +41,6 @@ class TestCharacter(CharacterEntity):
                 break
             neighbors = self.look_for_empty_cell_monster(wrld, current[0], current[1])
             for n in neighbors:
-                n = (n[0] + current[0], n[1] + current[1])
                 n_cost = self.get_hypotnuse(current,n)
                 new_cost = cost[current] + 1
                 if n not in cost or new_cost < cost[n]:
@@ -97,7 +96,8 @@ class TestCharacter(CharacterEntity):
     def variant2_do(self,wrld):
         (enemy,ex,ey) = self.within_range(3,wrld)
         if enemy:
-            # do expectimax using ex and ey for whatever is around
+            step = self.expectimax(wrld)
+            self.move(step[0], step[1])
             pass
         else:
             (exit, exit_x, exit_y) = self.find_exit(wrld)
@@ -144,6 +144,17 @@ class TestCharacter(CharacterEntity):
                 value -= 2 * mmove[0] # TODO : Fine tune this value
             value += dist_from_monster * mmove[0]
         return value
+
+    def expectimax(self, wrld):
+        possible_moves = self.weigh_moves(self,wrld)
+        max = 0
+        max_move = None
+        for move in possible_moves:
+            if move[2] >= max:
+                max = move[2]
+                max_move = (move[0],move[1])
+        return max_move
+
 
     def weigh_moves(self,wrld):
         moves = self.look_for_empty_cell_character(wrld)
@@ -229,7 +240,7 @@ class TestCharacter(CharacterEntity):
                         if(wrld.exit_at(monster_x + dx, monster_y + dy) or
                            wrld.empty_at(monster_x + dx, monster_y + dy)):
                             # Yes
-                            cells.append((dx, dy))
+                            cells.append((monster_x + dx, monster_y + dy))
         # All done
         return cells
 
