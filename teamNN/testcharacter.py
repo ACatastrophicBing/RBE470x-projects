@@ -174,8 +174,8 @@ class TestCharacter(CharacterEntity):
         return move_utilities
 
     def find_exit(self,wrld):
-        for x in range(wrld.height):
-            for y in range(wrld.width):
+        for x in range(len(wrld.grid)):
+            for y in range(len(wrld.grid[0])):
                 if wrld.exit_at(x, y):
                     return (True, x, y)
         return (False, 0, 0)
