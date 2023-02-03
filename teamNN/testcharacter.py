@@ -41,6 +41,7 @@ class TestCharacter(CharacterEntity):
                 break
             neighbors = self.look_for_empty_cell_monster(wrld, current[0], current[1])
             for n in neighbors:
+                n = (n[0] + current[0], n[1] + current[1])
                 n_cost = self.get_hypotnuse(current,n)
                 new_cost = cost[current] + 1
                 if n not in cost or new_cost < cost[n]:
@@ -51,6 +52,7 @@ class TestCharacter(CharacterEntity):
 
         path = []
         current_cell = goal
+        print(current_cell)
         while not current_cell == None:
             path.append(current_cell)
             current_cell = came_from[current_cell]
@@ -87,7 +89,7 @@ class TestCharacter(CharacterEntity):
         if exit:
             path = self.a_star(wrld,self.x, self.y, exit_x, exit_y)
             for step in path:
-                self.move(step(0) - self.x , step(1) - self.y)
+                self.move(step[0] - self.x , step[1] - self.y)
         else:
             print("oh fuck there's no exit")
         pass
