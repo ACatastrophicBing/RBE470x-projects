@@ -139,7 +139,9 @@ class TestCharacter(CharacterEntity):
         """
         value = 0
         for mmove in monster_moves:
-            (dx, dy, dist_from_monster) = self.a_star(wrld, move_x, move_y, mmove[1], mmove[2])
+            print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+            print(mmove)
+            (dx, dy, dist_from_monster) = self.a_star(wrld, move_x, move_y, mmove[0], mmove[1])
             if(dist_from_monster <= 2): # is this 1 or 2
                 value -= 2 * mmove[0] # TODO : Fine tune this value
             value += dist_from_monster * mmove[0]
@@ -166,7 +168,7 @@ class TestCharacter(CharacterEntity):
         #look for empty cells around monster to generate possible monster moves
         probability_moves = [[]] * len(monsters_at)
         for monster in monsters_at:
-            monster_moves = self.look_for_empty_cell_monster(wrld,monster.x,monster.y)
+            monster_moves = self.look_for_empty_cell_monster(wrld,monster[0],monster[1])
             for move in monster_moves: # 1 / len(monster_moves)
                 probability_moves[len(monsters_at)][move] = (1/len(monster_moves),move[0],move[1])
         # Set probability of monster doing that move
@@ -179,7 +181,7 @@ class TestCharacter(CharacterEntity):
             path_length = len(path)
             if max_path_length < path_length: max_path_length = path_length
             dists_from_goal[index] = path_length
-            monster_chance_values[index] = self.chance_monster_value(wrld,monster_moves,move[0],move[1])
+            monster_chance_values[index] = self.chance_monster_value(wrld,probability_moves,move[0],move[1])
 
 
 
@@ -190,7 +192,7 @@ class TestCharacter(CharacterEntity):
             # TODO : This definitely does not work, maybe have an external weight if we are super close to monter?
             big_scalar = 10
             utility = (max_path_length - dists_from_goal[i] + 1) * (monster_chance_values[i] * big_scalar)
-            move_utilities.append(moves[i].x, moves[i].y, utility)
+            move_utilities.append((moves[i][0], moves[i][1], utility))
 
         return move_utilities
 
