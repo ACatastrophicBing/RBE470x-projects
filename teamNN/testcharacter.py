@@ -97,7 +97,7 @@ class TestCharacter(CharacterEntity):
         (enemy,ex,ey) = self.within_range(3,wrld)
         if enemy:
             step = self.expectimax(wrld)
-            self.move(step[0], step[1])
+            self.move(step[0] - self.x, step[1] - self.y)
             pass
         else:
             (exit, exit_x, exit_y) = self.find_exit(wrld)
