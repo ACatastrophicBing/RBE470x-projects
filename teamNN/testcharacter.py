@@ -124,7 +124,7 @@ class TestCharacter(CharacterEntity):
                     # Avoid out-of-bounds access
                     if ((self.y + dy >= 0) and (self.y + dy < wrld.height())):
                         # Is a character at this position?
-                        if (wrld.characters_at(self.x + dx, self.y + dy)):
+                        if (wrld.monsters_at(self.x + dx, self.y + dy)):
                             return (True, dx, dy)
         # Nothing found
         return (False, 0, 0)
@@ -141,10 +141,11 @@ class TestCharacter(CharacterEntity):
         for mmove in monster_moves:
             print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
             print(mmove)
-            (dx, dy, dist_from_monster) = self.a_star(wrld, move_x, move_y, mmove[0], mmove[1])
+            path = self.a_star(wrld, move_x, move_y, mmove[0], mmove[1])
+            dist_from_monster = len(path)-1
             if(dist_from_monster <= 2): # is this 1 or 2
                 value -= 2 * mmove[0] # TODO : Fine tune this value
-            value += dist_from_monster * mmove[0]
+            value += (dist_from_monster) * mmove[0]
         return value
 
     def expectimax(self, wrld):
