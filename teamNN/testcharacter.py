@@ -226,7 +226,7 @@ class TestCharacter(CharacterEntity):
                         if(wrld.exit_at(self.x + dx, self.y + dy) or
                            wrld.empty_at(self.x + dx, self.y + dy)):
                             # Yes
-                            cells.append((dx, dy))
+                            cells.append((self.x + dx, self.y + dy))
         # All done
         return cells
 
