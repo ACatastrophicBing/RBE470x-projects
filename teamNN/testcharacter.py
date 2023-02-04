@@ -141,7 +141,7 @@ class TestCharacter(CharacterEntity):
         for mmove in monster_moves:
             print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
             print(mmove)
-            path = self.a_star(wrld, move_x, move_y, mmove[0], mmove[1])
+            path = self.a_star(wrld, move_x, move_y, mmove[1], mmove[2])
             dist_from_monster = len(path)-1
             if(dist_from_monster <= 2): # is this 1 or 2
                 value -= 2 * mmove[0] # TODO : Fine tune this value
@@ -162,7 +162,7 @@ class TestCharacter(CharacterEntity):
     def weigh_moves(self,wrld):
         moves = self.look_for_empty_cell_character(wrld)
         dists_from_goal = [None] * len(moves)
-        monster_chance_values = [None] * len(moves)
+        monster_chance_values = [0] * len(moves) # Moves that we can make weighted with the moves monster can make
         (exit,exit_x,exit_y) = self.find_exit(wrld)
         monsters_at = self.find_monsters(wrld)
 
@@ -182,7 +182,8 @@ class TestCharacter(CharacterEntity):
             path_length = len(path)
             if max_path_length < path_length: max_path_length = path_length
             dists_from_goal[index] = path_length
-            monster_chance_values[index] = self.chance_monster_value(wrld,probability_moves,move[0],move[1]) # TODO Jank
+            for i in range(len(monsters_at)):
+                monster_chance_values[index] += self.chance_monster_value(wrld,probability_moves[i],move[0],move[1]) # TODO Jank
 
 
 
