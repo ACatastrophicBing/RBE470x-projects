@@ -167,11 +167,11 @@ class TestCharacter(CharacterEntity):
         monsters_at = self.find_monsters(wrld)
 
         #look for empty cells around monster to generate possible monster moves
-        probability_moves = [[None]*8] * len(monsters_at)
+        probability_moves = [[]] * len(monsters_at)
         for monster in monsters_at:
             monster_moves = self.look_for_empty_cell_monster(wrld,monster[0],monster[1])
             for move in monster_moves: # 1 / len(monster_moves)
-                probability_moves[monsters_at.index(monster)][monster_moves.index(move)] = (1/len(monster_moves),move[0],move[1]) # TODO : Jank
+                probability_moves[monsters_at.index(monster)].append((1/len(monster_moves),move[0],move[1])) # TODO : Jank
         # Set probability of monster doing that move
 
         max_path_length = 0
