@@ -51,7 +51,6 @@ class TestCharacter(CharacterEntity):
 
         path = []
         current_cell = goal
-        print(current_cell)
         while not current_cell == None:
             path.append(current_cell)
             current_cell = came_from[current_cell]
@@ -139,8 +138,6 @@ class TestCharacter(CharacterEntity):
         """
         value = 0
         for mmove in monster_moves:
-            print("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
-            print(mmove)
             path = self.a_star(wrld, move_x, move_y, mmove[1], mmove[2])
             dist_from_monster = len(path)-1
             if(dist_from_monster <= 2): # is this 1 or 2

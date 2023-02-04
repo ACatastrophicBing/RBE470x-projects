@@ -18,11 +18,11 @@ random.seed(125) # TODO Change this if you want different random choices
 g = Game.fromfile('map.txt')
 g.add_monster(StupidMonster("stupid", # name
                             "S",      # avatar
-                            3, 5,     # position
+                            3, 10,     # position
 ))
 g.add_monster(SelfPreservingMonster("aggressive", # name
                                     "A",          # avatar
-                                    3, 13,        # position
+                                    3, 4,        # position
                                     1             # detection range
 ))
 
