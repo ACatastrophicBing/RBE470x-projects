@@ -20,7 +20,7 @@ class TestCharacter(CharacterEntity):
         super().__init__(name, avatar, x, y)
 
     def do(self, wrld):
-        self.variant2_do(wrld)
+        self.expectimax_do(wrld)
         pass
 
     # TODO : A* for a certain target in a given world from a certain position
@@ -82,18 +82,8 @@ class TestCharacter(CharacterEntity):
         #takes 2 tuples (cell_x, cell_y) and calculates the distance between them
         return math.hypot(abs(cell1[0]-cell2[0]), abs(cell1[1]-cell2[1]))
 
-    def variant1_do(self,wrld):
 
-        (exit, exit_x, exit_y) = self.find_exit(wrld)
-        if exit:
-            path = self.a_star(wrld,self.x, self.y, exit_x, exit_y)
-            step = path[1]
-            self.move(step[0] - self.x , step[1] - self.y)
-        else:
-            print("oh fuck there's no exit")
-        pass
-
-    def variant2_do(self,wrld):
+    def expectimax_do(self,wrld):
         (enemy,ex,ey) = self.within_range(3,wrld)
         if enemy:
             step = self.expectimax(wrld)
