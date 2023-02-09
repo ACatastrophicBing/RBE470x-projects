@@ -20,17 +20,22 @@ class TestCharacter(CharacterEntity):
         super().__init__(name, avatar, x, y)
 
     def do(self, wrld):
-        self.expectimax_do(wrld)
+        self.findbug(wrld)
         pass
 
     def findbug(self,wrld):
-        self.monster_bug_search(wrld)
+        monsters = self.monster_bug_search(wrld)
+        for monster in monsters:
+            print("We see a monster at %d, %d" % (monster[0],monster[1]))
+        monsters = self.find_monsters(wrld)
+        for monster in monsters:
+            print("The monster is actually at %d, %d" % (monster[0], monster[1]))
         pass
 
     def monster_bug_search(self,wrld):
         monsters = []
-        for x in range(wrld.height):
-            for y in range(wrld.width):
+        for x in range(wrld.height()):
+            for y in range(wrld.width()):
                 if wrld.monsters_at(x, y):
                     monsters.append((x, y))
         return monsters
