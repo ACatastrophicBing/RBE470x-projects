@@ -23,6 +23,29 @@ class TestCharacter(CharacterEntity):
         self.expectimax_do(wrld)
         pass
 
+    def findbug(self,wrld):
+        self.monster_bug_search(,wrld)
+        pass
+
+    def monster_bug_search(self,wrld):
+        def look_for_empty_cell_monster(self, wrld, monster_x, monster_y):
+            # List of empty cells
+            cells = []
+            # Go through neighboring cells
+            for dx in [-1, 0, 1]:
+                # Avoid out-of-bounds access
+                if ((monster_x + dx >= 0) and (monster_x + dx < wrld.width())):
+                    for dy in [-1, 0, 1]:
+                        # Avoid out-of-bounds access
+                        if ((monster_y + dy >= 0) and (monster_y + dy < wrld.height())):
+                            # Is this cell safe?
+                            if (wrld.exit_at(monster_x + dx, monster_y + dy) or
+                                    wrld.empty_at(monster_x + dx, monster_y + dy)):
+                                # Yes
+                                cells.append((monster_x + dx, monster_y + dy))
+            # All done
+            return cells
+
     # TODO : A* for a certain target in a given world from a certain position
     def a_star(self,wrld,startingx,startingy,targetx,targety):
         start = (startingx, startingy)
