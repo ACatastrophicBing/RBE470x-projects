@@ -1,7 +1,7 @@
 # This is necessary to find the main code
 import sys
 from queue import PriorityQueue
-sys.path.insert(0, '../../bomberman')
+sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
 import math

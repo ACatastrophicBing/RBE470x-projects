@@ -1,0 +1,36 @@
+Penis
+Actions w_i
+w_place_bomb # Unsure how this will be used
+w_monster # multiplied by Scalar / (A* distance from monster probably)
+
+# Might have an array for this, or will just be a multiplicative factor?
+w_move_x # weight of moving -1, 0, +1 in x
+w_move_y # weight of moving -1, 0, +1 in y
+# Might also just be an array of 9, and we'll still be multiplying by the next A* step (or at least how close we get to it next)
+# Will be multiplied by the vertical, horizontala distance from goal, and probably also the A* distance from goal? - f_move, f_distance_from_goal, etc
+
+States f_i
+# We will have an array of size 9 to select which move we can do?
+f_move # each of our moves percentage chance, so if we are up against a wall its a 0 chance
+
+f_distance_from_goal # A* distance from goal
+f_distance_from_goal_x # Vertical distance from goal
+f_distance_from_goal_y # Horizontal distance from goal
+# These last two might also be the next step torwards goal given by A*?
+
+# Multiple monsters means below will have to be a list probably, and each instance of monster also warrants the possible actions they can take as well?
+f_distance_from_monster # A* distance from monster
+f_distance_from_monster_x # Vertical distance from monster
+f_distance_from_monster_y # Horizontal distance from monster
+
+f_distance_from_bomb_x # Vertical distance from closest bomb explosion in the x
+f_distance_from_bomb_y # Horizontal distance from closest bomb explosion in the y
+# These will probably be multiplied by 1 / (how long until the bomb explodes)
+
+Rewards
+-1 for each move
+-500 for dying
++10 for destroying a wall
++50 for destroying a monster
++500 for reaching goal
++10000000 if one of us dies
