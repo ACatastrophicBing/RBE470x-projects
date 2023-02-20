@@ -5,6 +5,7 @@ sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
 import math
+import csv
 from colorama import Fore, Back
 
 def find_next(wrld):
@@ -13,14 +14,106 @@ def find_next(wrld):
     # Weigh each node based on A* to goal and distance from enemy, if tile we are trying to go to is within 1 of enemy, make it 0?
     return (x,y)
 
+moves = [[-1,-1,0],[-1,1,0],[1,-1,0],[1,1,0],[-1,0,0],[0,-1,0],[1,0,0],[0,1,0],[0,0,0],[0,0,1]]
 
 class TestCharacter(CharacterEntity):
 
     def __init__(self,name,avatar,x,y):
         super().__init__(name, avatar, x, y)
+        self.weights = [1,2,4,-4,10,1,2,3,4,5]
+
+        """
+        List of Rewards Below
+        """
+        self.reward_win = 500
+        self.death = -500
+        self.cost_of_living = -1
+        self.wall_demo = 10
+        self.monster_kill = 50
+        self.character_kill = 100
+
+    def __init__(self,name,avatar,x,y,weight_list):
+        super().__init__(name, avatar, x, y)
+        self.weights = weight_list
+
+        """
+        List of Rewards Below
+        """
+        self.reward_win = 500
+        self.death = -500
+        self.cost_of_living = -1
+        self.wall_demo = 10
+        self.monster_kill = 50
+        self.character_kill = 100
 
     def do(self, wrld):
         self.expectimax_do(wrld)
+        pass
+
+    def q_learning(self,wrld):
+        alpha = 0.1
+        gamma = 0.9
+        (exit, exit_x, exit_y) = self.find_exit(wrld)
+        monsters_position = self.find_monsters(wrld)
+
+        #dist from goal
+        for i in range(10): #calcualte q(s,a)
+            action_position_x = self.x + moves[i][0]
+            action_position_y = self.y + moves[i][1]
+
+            #calculate all the f values needed for q(s,a)
+            path_to_exit = self.a_star(wrld, action_position_x, action_position_y, exit_x, exit_y)
+            astar_dist_exit = 1 / len(path_to_exit)
+            # what happens when can't find path to exit?
+            man_dist_exit = 1 / self.manhattan_distance(action_position_x, action_position_y, exit_x, exit_y)
+            #dist from monsters
+            f_monster = 0
+            for monster in monsters_position:
+                f_monster += 1 / self.manhattan_distance(action_position_x, action_position_y, monster[0], monster[1]) # Should work? Definite maybe
+
+            #dist from bomb
+            # check if bomb is in play, if in play, calculate distance - bomb in play IF len(wrld.bombs.value()) > 0 probably? Gotta debug that
+
+            # TODO : Copy above loop, but take into account the WORST (minimax) possible move the monster can make (Smallest A* to monster)
+            # Get max of inner for loop, and then get the delta with the max
+
+    def weight_delta(self):
+        pass
+    def q_function(self,f_values):
+        value = 0
+        for i in range(len(f_values)):
+            value += f_values[i] * self.weights[i]
+            # We need to figure out if there are multiple monsters
+            # TODO : Figure out how to do that
+        return value
+
+    def identify_rewards(self,next_position):
+        reward = -1
+        # If we predict our character dying (within range of monster or bomb has 1 left and either x and y distance from bomb is 0
+        # If the bomb blows up and breaks a wall, add 10
+        # If next position is the goal, +500
+        # If we are killing a monster, +50
+        # If we are killing another character (other than ourselves) +100 - lets not do this
+        return reward
+
+    def manhattan_distance(self,startx,starty,targetx,targety):
+        return math.abs(targetx - startx) + math.abs(targety - starty)
+
+    def save_to_csv(self):
+        # Save the weights in order to a CSV
+
+        # field names
+        fields = ['Weights']
+
+        # data rows of csv file
+        rows = self.weights
+
+        with open('GFG', 'w') as f:
+            # using csv.writer method from CSV package
+            write = csv.writer(f)
+
+            write.writerow(fields)
+            write.writerows(rows)
         pass
 
     # TODO : A* for a certain target in a given world from a certain position
