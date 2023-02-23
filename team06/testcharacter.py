@@ -1,5 +1,6 @@
 # This is necessary to find the main code
 import sys
+import numpy as np
 from queue import PriorityQueue
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
@@ -20,7 +21,9 @@ class TestCharacter(CharacterEntity):
 
     def __init__(self,name,avatar,x,y):
         super().__init__(name, avatar, x, y)
-        self.weights = [1,2,4,-4,10,1,2,3,4,5]
+
+        # TODO : Pull weights from CSV
+        self.weights = [1,1,1,1,1,1,1,1,1,1,1,1,1]
 
         """
         List of Rewards Below
@@ -62,23 +65,96 @@ class TestCharacter(CharacterEntity):
             action_position_y = self.y + moves[i][1]
 
             #calculate all the f values needed for q(s,a)
+
             path_to_exit = self.a_star(wrld, action_position_x, action_position_y, exit_x, exit_y)
-            astar_dist_exit = 1 / len(path_to_exit)
-            # what happens when can't find path to exit?
-            man_dist_exit = 1 / self.manhattan_distance(action_position_x, action_position_y, exit_x, exit_y)
-            #dist from monsters
-            f_monster = 0
+            character_direction
+
+            f_direction = 0
+
+            # TODO : Pretty sure these lists CANNOT be multiplies / divided, so make them numpy arrays probably
+            if(len(path_to_exit) > 0): # Currently using Unit Vectors
+                character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
+                # character_direction = np.array(path_to_exit[0]*len(path_to_exit))
+                pass
+            else:
+                path_to_exit = [exit_x, exit_y]
+                character_direction = np.array([action_position_x - path_to_exit[0],action_position_y - path_to_exit[1]]) / math.sqrt((action_position_x - path_to_exit[0])^2 + (action_position_y - path_to_exit[1])^2)
+                # character_direction = np.array([action_position_x - path_to_exit[0],action_position_y - path_to_exit[1]])
+
+                pass
+
+            monster_direction
             for monster in monsters_position:
-                f_monster += 1 / self.manhattan_distance(action_position_x, action_position_y, monster[0], monster[1]) # Should work? Definite maybe
+                path_to_mon = self.a_star(wrld, monster[0], monster[1], exit_x, exit_y)
+                if(len(path_to_mon) > 0):
+                    monster_direction = np.array(path_to_mon[0]) / magnitude(np.array(path_to_mon[0]))
+                    # monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
+                    #there is path do something
+                    pass
+                else:
+                    monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
+                    # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]])
+                    #there is no path, panic
+                    pass
+
+                # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
+                f_direction += np.dot(character_direction,-monster_direction)
+
+            astar_dist_exit = 1 / len(path_to_exit)
+
+            """
+            For the f_direction, which is just the weight or something for the direction we want to go in
+            Dot product of the position we want to go to next, with the unit vector of the monster
+            The position we want to go to next is given by:
+            A* if there is a path that exists
+            or
+            The unit vector of the chracter to the goal
+            
+            The monster unit vector can either be
+            the A* to the monster's next move
+            Or
+            The unit vector to the monster if the path does not exist
+            Monster's unit vector might also be [1,1] - [the above] since we DONT want to go torwards the monster
+            Actually, we will probably do the dot product of direction we want to go with the -dot product of the monster
+            
+            If multiple monsters, the result is additive
+            
+            Do we want A* of path length and distance from monster magnitude?
+            Do we actually just want the vector to the monster, and does that mean that for the distance from goal,
+            would that be a vector as well, so for A* it would be distance * next move?
+            
+            We want a smaller number the closer the monster is to us, so would it be nextmovevector - 1/monstervector?
+            """
 
             #dist from bomb
             # check if bomb is in play, if in play, calculate distance - bomb in play IF len(wrld.bombs.value()) > 0 probably? Gotta debug that
+            f_bomb_x = 0 # Large if close, small if far
+            f_bomb_y = 0
+            bombs = self.find_bomb(wrld)
+            if bombs > 0:
+                for bomb in bombs:
+                    f_bomb_x += 1 / (action_position_x - bomb[0] + 0.001)
+                    f_bomb_y += 1 / (action_position_y - bomb[1] + 0.001)
 
             # TODO : Copy above loop, but take into account the WORST (minimax) possible move the monster can make (Smallest A* to monster)
             # Get max of inner for loop, and then get the delta with the max
 
+
+            # f_values = [0] * 13
+            f_values = [0]*3
+            f_values[0] = f_direction
+            f_values[1] = f_bomb_x
+            f_values[2] = f_bomb_y
+            # f_values[i+3] = 1
+
+            q_s_a = self.q_function(f_values)
+
+            def magnitude(vector):
+                return math.sqrt(sum(pow(element, 2) for element in vector))
+
     def weight_delta(self):
         pass
+    
     def q_function(self,f_values):
         value = 0
         for i in range(len(f_values)):
@@ -87,17 +163,57 @@ class TestCharacter(CharacterEntity):
             # TODO : Figure out how to do that
         return value
 
-    def identify_rewards(self,next_position):
-        reward = -1
+    def identify_rewards(self,wrld,next_position):
+        reward = -1 #cost of living
         # If we predict our character dying (within range of monster or bomb has 1 left and either x and y distance from bomb is 0
+        monsters_position = self.find_monsters(wrld)
+
+        for monster in monsters_position:
+            dist_to_monster = self.eights_distance(next_position[0],next_position[1],monster[0],monster[1])
+            if dist_to_monster <= 1:
+                reward -= 500 # we committed Foisie jump
+
         # If the bomb blows up and breaks a wall, add 10
-        # If next position is the goal, +500
-        # If we are killing a monster, +50
-        # If we are killing another character (other than ourselves) +100 - lets not do this
+        for bomb in self.get_bombs(wrld):
+            for i in range(4):
+                if wrld.monsters_at(min(max(0,bomb[0] + i),wrld.width),bomb[1]):
+                    reward += 50
+                if wrld.wall_at(min(max(0, bomb[0] + i), wrld.width), bomb[1]):
+                    reward += 10
+                if next_position[0] == min(max(0, bomb[0] + i), wrld.width) and next_position[1] == bomb[1]:
+                    reward -= 500
+                if wrld.monsters_at(min(max(0,bomb[0] - i),wrld.width),bomb[1]):
+                    reward += 50
+                if wrld.wall_at(min(max(0, bomb[0] - i), wrld.width), bomb[1]):
+                    reward += 10
+                if next_position[0] == min(max(0, bomb[0] - i), wrld.width) and next_position[1] == bomb[1]:
+                    reward -= 500
+                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] + i),wrld.height)):
+                    reward += 50
+                if wrld.wall_at(bomb[0], min(max(0,bomb[1] + i),wrld.height)):
+                    reward += 10
+                if next_position[1] == min(max(0, bomb[1] + i), wrld.width) and next_position[0] == bomb[0]:
+                    reward -= 500
+                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] - i),wrld.height)):
+                    reward += 50
+                if wrld.wall_at(bomb[0], min(max(0,bomb[1] - i),wrld.height)):
+                    reward += 10
+                if next_position[1] == min(max(0, bomb[1] - i), wrld.width) and next_position[0] == bomb[0]:
+                    reward -= 500
+
+        (exit, exit_x, exit_y) = self.find_exit(wrld)
+        if next_position[0] == exit_x and next_position[1] == exit_y:
+            reward += 500
+
         return reward
+
 
     def manhattan_distance(self,startx,starty,targetx,targety):
         return math.abs(targetx - startx) + math.abs(targety - starty)
+
+    def eights_distance(self,startx,starty,targetx,targety):
+        return max(math.abs(targetx - startx), math.abs(targety - starty))
+
 
     def save_to_csv(self):
         # Save the weights in order to a CSV
@@ -141,15 +257,17 @@ class TestCharacter(CharacterEntity):
                     priority = new_cost + n_cost
                     frontier.put(n,priority)
                     came_from[n] = current
-
         path = []
-        current_cell = goal
-        while not current_cell == None:
-            path.append(current_cell)
-            current_cell = came_from[current_cell]
+        try:
+            current_cell = goal
+            while not current_cell == None:
+                path.append(current_cell)
+                current_cell = came_from[current_cell]
 
-        path = list(reversed(path))
-        return path
+            path = list(reversed(path))
+            return path # TODO :  We might need a try catch here if there is no path
+        except:
+            return path
 
     def look_for_empty_cell(self, wrld):
         # List of empty cells
@@ -291,6 +409,13 @@ class TestCharacter(CharacterEntity):
         for monster in monsters:
             monster_locations.append((monster[0].x, monster[0].y))
         return monster_locations
+
+    def find_bomb(self,wrld):
+        bomb_locations = []
+        bombs = wrld.bombs.values()
+        for bomb in bombs:
+            bomb_locations.append((bomb[0].x, bomb[0].y))
+        return bomb_locations
 
     def look_for_empty_cell_character(self, wrld):
         # List of empty cells
