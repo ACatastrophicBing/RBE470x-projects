@@ -2,11 +2,11 @@
 import sys
 import numpy as np
 from queue import PriorityQueue
+import math
+import csv
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
-import math
-import csv
 from colorama import Fore, Back
 
 def find_next(wrld):
@@ -15,6 +15,15 @@ def find_next(wrld):
     # Weigh each node based on A* to goal and distance from enemy, if tile we are trying to go to is within 1 of enemy, make it 0?
     return (x,y)
 
+def magnitude(vector):
+            return math.sqrt(sum(pow(element, 2) for element in vector))
+
+def manhattan_distance(self,startx,starty,targetx,targety):
+    return math.abs(targetx - startx) + math.abs(targety - starty)
+
+def eights_distance(self, startx, starty, targetx, targety):
+    return max(math.abs(targetx - startx), math.abs(targety - starty))
+
 moves = [[-1,-1,0],[-1,1,0],[1,-1,0],[1,1,0],[-1,0,0],[0,-1,0],[1,0,0],[0,1,0],[0,0,0],[0,0,1]]
 
 class TestCharacter(CharacterEntity):
@@ -22,8 +31,7 @@ class TestCharacter(CharacterEntity):
     def __init__(self,name,avatar,x,y):
         super().__init__(name, avatar, x, y)
 
-        # TODO : Pull weights from CSV
-        self.weights = [1,1,1,1,1,1,1,1,1,1,1,1,1]
+        # TODO ANDY : PULL FROM CSV RIGHT HERE
 
         """
         List of Rewards Below
@@ -38,6 +46,7 @@ class TestCharacter(CharacterEntity):
     def __init__(self,name,avatar,x,y,weight_list):
         super().__init__(name, avatar, x, y)
         self.weights = weight_list
+        # TODO ANDY : PULL FROM CSV RIGHT HERE, ALSO FIGURE OUT WHERE TO SAVE TO CSV, B I T C H
 
         """
         List of Rewards Below
@@ -50,16 +59,27 @@ class TestCharacter(CharacterEntity):
         self.character_kill = 100
 
     def do(self, wrld):
-        self.expectimax_do(wrld)
+        self.q_learning(wrld)
         pass
 
     def q_learning(self,wrld):
         alpha = 0.1
         gamma = 0.9
+        num_actions = 10
+        num_f = 4
         (exit, exit_x, exit_y) = self.find_exit(wrld)
         monsters_position = self.find_monsters(wrld)
 
-        #dist from goal
+        best_action = [self.x,self.y]
+        best_q_sa = 0
+
+        q_sa_prime_max = 0
+        q_sa = []
+        actions = []
+
+        f_values = [[]] * num_actions
+
+        # start of q_sa
         for i in range(10): #calcualte q(s,a)
             action_position_x = self.x + moves[i][0]
             action_position_y = self.y + moves[i][1]
@@ -133,24 +153,129 @@ class TestCharacter(CharacterEntity):
             bombs = self.find_bomb(wrld)
             if bombs > 0:
                 for bomb in bombs:
-                    f_bomb_x += 1 / (action_position_x - bomb[0] + 0.001)
-                    f_bomb_y += 1 / (action_position_y - bomb[1] + 0.001)
+                    f_bomb_x += 1 / abs(action_position_x - bomb[0] + 0.001)
+                    f_bomb_y += 1 / abs(action_position_y - bomb[1] + 0.001)
 
             # TODO : Copy above loop, but take into account the WORST (minimax) possible move the monster can make (Smallest A* to monster)
             # Get max of inner for loop, and then get the delta with the max
-
-
-            # f_values = [0] * 13
-            f_values = [0]*3
-            f_values[0] = f_direction
-            f_values[1] = f_bomb_x
-            f_values[2] = f_bomb_y
+            f_values[i].append(f_direction)
+            f_values[i].append(f_bomb_x)
+            f_values[i].append(f_bomb_y)
+            f_values[i].append(moves[i][2])
             # f_values[i+3] = 1
 
-            q_s_a = self.q_function(f_values)
+            q_sa.append(self.q_function(f_values[i]))
+            place_bomb = moves[i][2]
+            actions.append([action_position_x,action_position_y,place_bomb])
+            """
+            Have q_sa
+            We now want q_sa_prime
+            """
 
-            def magnitude(vector):
-                return math.sqrt(sum(pow(element, 2) for element in vector))
+        # Now we have selected our action, so update the weights based on the rewards and q_sa_prime_max for that action
+        max_q_sa = max(q_sa)
+        index_best = q_sa.index(max_q_sa)
+        action = actions[index_best]
+        q_sa_prime = []
+        f_values_prime = [[]] * num_actions
+
+        for j in range(10):  # calcualte q(s_prime,a_prime)
+            s_prime_position_x = action[0] + moves[j][0]
+            s_prime_position_y = action[1] + moves[j][1]
+
+            # calculate all the f values needed for q(s,a)
+
+            path_to_exit = self.a_star(wrld, s_prime_position_x, s_prime_position_y, exit_x, exit_y)
+            character_direction
+
+            f_direction = 0
+
+            if (len(path_to_exit) > 0):  # Currently using Unit Vectors
+                character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
+                # character_direction = np.array(path_to_exit[0]*len(path_to_exit))
+                pass
+            else:
+                path_to_exit = [exit_x, exit_y]
+                character_direction = np.array(
+                    [s_prime_position_x - path_to_exit[0], s_prime_position_y - path_to_exit[1]]) / math.sqrt(
+                    (s_prime_position_x - path_to_exit[0]) ^ 2 + (s_prime_position_y - path_to_exit[1]) ^ 2)
+                # character_direction = np.array([s_prime_position_x - path_to_exit[0],s_prime_position_y - path_to_exit[1]])
+
+                pass
+
+            monster_direction
+            # probability_moves = [[]] * len(monsters_position)
+            for monster in monsters_position:
+                worst_move = [monster[0],monster[1]] # For us
+                min_dist = 100
+                monster_moves = self.look_for_empty_cell_monster(wrld, monster[0], monster[1])
+                for move in monster_moves:  # 1 / len(monster_moves)
+                    man_monster_dist = self.manhattan_distance(s_prime_position_x,s_prime_position_y,move[0],move[1])
+                    if man_monster_dist < min_dist:
+                        min_dist = man_monster_dist
+                        worst_move = [move[0],move[1]]
+                    # probability_moves[monsters_position.index(monster)].append((1 / len(monster_moves), move[0], move[1])) # Do we need this?
+
+                path_to_mon = self.a_star(wrld, worst_move[0], worst_move[1], exit_x, exit_y)
+                if (len(path_to_mon) > 0):
+                    monster_direction = np.array(path_to_mon[0]) / magnitude(np.array(path_to_mon[0]))
+                    # monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
+                    # there is path do something
+                    pass
+                else:
+                    monster_direction = np.array(
+                        [s_prime_position_x - worst_move[0], s_prime_position_y - worst_move[1]]) / math.sqrt(
+                        (s_prime_position_x - worst_move[0]) ^ 2 + (s_prime_position_y - worst_move[1]) ^ 2)
+                    # monster_direction = np.array([s_prime_position_x - monster[0],s_prime_position_y - monster[1]])
+                    # there is no path, panic
+                    pass
+
+                # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
+                f_direction += np.dot(character_direction, -monster_direction)
+
+            # astar_dist_exit = 1 / len(path_to_exit)
+
+            # dist from bomb
+            # check if bomb is in play, if in play, calculate distance - bomb in play IF len(wrld.bombs.value()) > 0 probably? Gotta debug that
+            f_bomb_x = 0  # Large if close, small if far
+            f_bomb_y = 0
+            if action[2] == 1:
+                # TODO Pretend there's a bomb places
+                bomb = [action[0],action[1]]
+                f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.001)
+                f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.001)
+            if bombs > 0:
+                for bomb in bombs:
+                    f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.001)
+                    f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.001)
+
+
+            # TODO : Copy above loop, but take into account the WORST (minimax) possible move the monster can make (Smallest A* to monster)
+            f_values_prime[j].append(f_direction)
+            f_values_prime[j].append(f_bomb_x)
+            f_values_prime[j].append(f_bomb_y)
+            f_values_prime[j].append(moves[j][2])
+
+            q_sa_prime.append(self.q_function(f_values_prime[j]))
+
+        """
+        Now we maximize q_sa_prime
+        """
+        q_sa_prime_max = max(q_sa_prime)
+        """
+        And now here's our rewards
+        """
+        reward = self.identify_rewards(wrld,[action[0],action[1]])
+        # TODO : Delta function here
+        delta = reward + gamma*q_sa_prime_max - q_sa
+        for i in range(len(f_values[index_best])):
+            self.weights += alpha*delta*f_values[index_best][i]
+
+        if action[2] == 1:
+            self.place_bomb()
+            return action
+        self.move(action[0] - self.x, action[1] - self.y)
+        return action
 
     def weight_delta(self):
         pass
@@ -206,13 +331,6 @@ class TestCharacter(CharacterEntity):
             reward += 500
 
         return reward
-
-
-    def manhattan_distance(self,startx,starty,targetx,targety):
-        return math.abs(targetx - startx) + math.abs(targety - starty)
-
-    def eights_distance(self,startx,starty,targetx,targety):
-        return max(math.abs(targetx - startx), math.abs(targety - starty))
 
 
     def save_to_csv(self):
