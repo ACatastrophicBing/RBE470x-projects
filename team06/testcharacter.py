@@ -32,6 +32,7 @@ class TestCharacter(CharacterEntity):
         super().__init__(name, avatar, x, y)
 
         # TODO ANDY : PULL FROM CSV RIGHT HERE
+        self.weights = self.read_from_csv
 
         """
         List of Rewards Below
@@ -47,6 +48,7 @@ class TestCharacter(CharacterEntity):
         super().__init__(name, avatar, x, y)
         self.weights = weight_list
         # TODO ANDY : PULL FROM CSV RIGHT HERE, ALSO FIGURE OUT WHERE TO SAVE TO CSV, B I T C H
+        self.weights = self.read_from_csv
 
         """
         List of Rewards Below
@@ -269,7 +271,8 @@ class TestCharacter(CharacterEntity):
         # TODO : Delta function here
         delta = reward + gamma*q_sa_prime_max - q_sa
         for i in range(len(f_values[index_best])):
-            self.weights += alpha*delta*f_values[index_best][i]
+            self.weights += alpha*delta*f_values[index_best][i] #update the weights
+            self.save_to_csv(self.weights) #save the list of weights to weights.csv
 
         if action[2] == 1:
             self.place_bomb()
@@ -333,22 +336,36 @@ class TestCharacter(CharacterEntity):
         return reward
 
 
-    def save_to_csv(self):
+    def save_to_csv(self, weights): #saves a list of numbers to weights.csv
         # Save the weights in order to a CSV
 
         # field names
         fields = ['Weights']
 
         # data rows of csv file
-        rows = self.weights
+        rows = []
+        for w in weights:
+                rows.append([w])
 
-        with open('GFG', 'w') as f:
+        with open('weights.csv', 'w',  newline='') as f:
             # using csv.writer method from CSV package
             write = csv.writer(f)
 
             write.writerow(fields)
             write.writerows(rows)
         pass
+
+    def read_from_csv(self): #returns a list of numbers saved in weights.csv
+        file = open('weights.csv')
+        type(file)
+        csvreader = csv.reader(file)
+        header = []
+        header = next(csvreader)
+        rows = []
+        for row in csvreader:
+            print(row)
+            rows.append(float(row[0]))
+        return rows
 
     # TODO : A* for a certain target in a given world from a certain position
     def a_star(self,wrld,startingx,startingy,targetx,targety):
