@@ -12,17 +12,17 @@ from testcharacter import TestCharacter
 
 
 # Create the game
-g = Game.fromfile('map.txt')
 
 lil_Johnny = TestCharacter("me", "C", 0, 0)
 # TODO Add your character
-g.add_character(lil_Johnny)
 
 # Run!
 iterations = 1000
 
 for i in range(iterations):
-    g.go()
+    g = Game.fromfile('map.txt')
+    g.add_character(lil_Johnny)
+    g.go(1)
 
 # Save this characters info :
 lil_Johnny.save_to_CSV()
