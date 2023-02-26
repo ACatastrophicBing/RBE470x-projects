@@ -30,25 +30,7 @@ class TestCharacter(CharacterEntity):
 
     def __init__(self,name,avatar,x,y):
         super().__init__(name, avatar, x, y)
-
-        # TODO ANDY : PULL FROM CSV RIGHT HERE
-        self.weights = self.read_from_csv
-
-        """
-        List of Rewards Below
-        """
-        self.reward_win = 500
-        self.death = -500
-        self.cost_of_living = -1
-        self.wall_demo = 10
-        self.monster_kill = 50
-        self.character_kill = 100
-
-    def __init__(self,name,avatar,x,y,weight_list):
-        super().__init__(name, avatar, x, y)
-        self.weights = weight_list
-        # TODO ANDY : PULL FROM CSV RIGHT HERE, ALSO FIGURE OUT WHERE TO SAVE TO CSV, B I T C H
-        self.weights = self.read_from_csv
+        self.weights = self.read_from_csv()
 
         """
         List of Rewards Below
@@ -79,7 +61,7 @@ class TestCharacter(CharacterEntity):
         q_sa = []
         actions = []
 
-        f_values = [[]] * num_actions
+        f_values = [[] for _ in range(num_actions)]
 
         # start of q_sa
         for i in range(10): #calcualte q(s,a)
@@ -89,38 +71,41 @@ class TestCharacter(CharacterEntity):
             #calculate all the f values needed for q(s,a)
 
             path_to_exit = self.a_star(wrld, action_position_x, action_position_y, exit_x, exit_y)
-            character_direction
+            character_direction = np.array([0,0])
 
             f_direction = 0
 
             # TODO : Pretty sure these lists CANNOT be multiplies / divided, so make them numpy arrays probably
             if(len(path_to_exit) > 0): # Currently using Unit Vectors
-                character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
-                # character_direction = np.array(path_to_exit[0]*len(path_to_exit))
+                # character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
+                character_direction = np.array(path_to_exit[0]*len(path_to_exit))
                 pass
             else:
                 path_to_exit = [exit_x, exit_y]
-                character_direction = np.array([action_position_x - path_to_exit[0],action_position_y - path_to_exit[1]]) / math.sqrt((action_position_x - path_to_exit[0])^2 + (action_position_y - path_to_exit[1])^2)
-                # character_direction = np.array([action_position_x - path_to_exit[0],action_position_y - path_to_exit[1]])
+                # character_direction = np.array([action_position_x - path_to_exit[0],action_position_y - path_to_exit[1]]) / math.sqrt((action_position_x - path_to_exit[0])^2 + (action_position_y - path_to_exit[1])^2)
+                character_direction = np.array([action_position_x - path_to_exit[0],action_position_y - path_to_exit[1]])
 
                 pass
 
-            monster_direction
+            monster_direction = np.array([0,0])
             for monster in monsters_position:
                 path_to_mon = self.a_star(wrld, monster[0], monster[1], exit_x, exit_y)
                 if(len(path_to_mon) > 0):
-                    monster_direction = np.array(path_to_mon[0]) / magnitude(np.array(path_to_mon[0]))
-                    # monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
+                    # monster_direction = np.array(path_to_mon[0]) / magnitude(np.array(path_to_mon[0]))
+                    monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
                     #there is path do something
                     pass
                 else:
-                    monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
-                    # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]])
+                    # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
+                    monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]])
                     #there is no path, panic
                     pass
 
                 # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
                 f_direction += np.dot(character_direction,-monster_direction)
+            if len(monsters_position) == 0:
+                f_direction += np.dot(character_direction,character_direction)
+                # TODO : We probably need a down f and a right / left f maybe?
 
             astar_dist_exit = 1 / len(path_to_exit)
 
@@ -153,7 +138,7 @@ class TestCharacter(CharacterEntity):
             f_bomb_x = 0 # Large if close, small if far
             f_bomb_y = 0
             bombs = self.find_bomb(wrld)
-            if bombs > 0:
+            if len(bombs) > 0:
                 for bomb in bombs:
                     f_bomb_x += 1 / abs(action_position_x - bomb[0] + 0.001)
                     f_bomb_y += 1 / abs(action_position_y - bomb[1] + 0.001)
@@ -179,7 +164,7 @@ class TestCharacter(CharacterEntity):
         index_best = q_sa.index(max_q_sa)
         action = actions[index_best]
         q_sa_prime = []
-        f_values_prime = [[]] * num_actions
+        f_values_prime = [[] for _ in range(num_actions)]
 
         for j in range(10):  # calcualte q(s_prime,a_prime)
             s_prime_position_x = action[0] + moves[j][0]
@@ -246,7 +231,7 @@ class TestCharacter(CharacterEntity):
                 bomb = [action[0],action[1]]
                 f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.001)
                 f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.001)
-            if bombs > 0:
+            if len(bombs) > 0:
                 for bomb in bombs:
                     f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.001)
                     f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.001)
@@ -269,7 +254,7 @@ class TestCharacter(CharacterEntity):
         """
         reward = self.identify_rewards(wrld,[action[0],action[1]])
         # TODO : Delta function here
-        delta = reward + gamma*q_sa_prime_max - q_sa
+        delta = reward + gamma*q_sa_prime_max - max_q_sa
         for i in range(len(f_values[index_best])):
             self.weights += alpha*delta*f_values[index_best][i] #update the weights
             self.save_to_csv(self.weights) #save the list of weights to weights.csv
@@ -277,6 +262,7 @@ class TestCharacter(CharacterEntity):
         if action[2] == 1:
             self.place_bomb()
             return action
+        print("Action Selected")
         self.move(action[0] - self.x, action[1] - self.y)
         return action
 
@@ -302,31 +288,31 @@ class TestCharacter(CharacterEntity):
                 reward -= 500 # we committed Foisie jump
 
         # If the bomb blows up and breaks a wall, add 10
-        for bomb in self.get_bombs(wrld):
+        for bomb in self.find_bomb(wrld):
             for i in range(4):
-                if wrld.monsters_at(min(max(0,bomb[0] + i),wrld.width),bomb[1]):
+                if wrld.monsters_at(min(max(0,bomb[0] + i),wrld.width()),bomb[1]):
                     reward += 50
-                if wrld.wall_at(min(max(0, bomb[0] + i), wrld.width), bomb[1]):
+                if wrld.wall_at(min(max(0, bomb[0] + i), wrld.width()), bomb[1]):
                     reward += 10
-                if next_position[0] == min(max(0, bomb[0] + i), wrld.width) and next_position[1] == bomb[1]:
+                if next_position[0] == min(max(0, bomb[0] + i), wrld.width()) and next_position[1] == bomb[1]:
                     reward -= 500
-                if wrld.monsters_at(min(max(0,bomb[0] - i),wrld.width),bomb[1]):
+                if wrld.monsters_at(min(max(0,bomb[0] - i),wrld.width()),bomb[1]):
                     reward += 50
-                if wrld.wall_at(min(max(0, bomb[0] - i), wrld.width), bomb[1]):
+                if wrld.wall_at(min(max(0, bomb[0] - i), wrld.width()), bomb[1]):
                     reward += 10
-                if next_position[0] == min(max(0, bomb[0] - i), wrld.width) and next_position[1] == bomb[1]:
+                if next_position[0] == min(max(0, bomb[0] - i), wrld.width()) and next_position[1] == bomb[1]:
                     reward -= 500
-                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] + i),wrld.height)):
+                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] + i),wrld.height())):
                     reward += 50
-                if wrld.wall_at(bomb[0], min(max(0,bomb[1] + i),wrld.height)):
+                if wrld.wall_at(bomb[0], min(max(0,bomb[1] + i),wrld.height())):
                     reward += 10
-                if next_position[1] == min(max(0, bomb[1] + i), wrld.width) and next_position[0] == bomb[0]:
+                if next_position[1] == min(max(0, bomb[1] + i), wrld.height()) and next_position[0] == bomb[0]:
                     reward -= 500
-                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] - i),wrld.height)):
+                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] - i),wrld.height())):
                     reward += 50
-                if wrld.wall_at(bomb[0], min(max(0,bomb[1] - i),wrld.height)):
+                if wrld.wall_at(bomb[0], min(max(0,bomb[1] - i),wrld.height())):
                     reward += 10
-                if next_position[1] == min(max(0, bomb[1] - i), wrld.width) and next_position[0] == bomb[0]:
+                if next_position[1] == min(max(0, bomb[1] - i), wrld.height()) and next_position[0] == bomb[0]:
                     reward -= 500
 
         (exit, exit_x, exit_y) = self.find_exit(wrld)
@@ -542,14 +528,14 @@ class TestCharacter(CharacterEntity):
         monster_locations = []
         monsters = wrld.monsters.values()
         for monster in monsters:
-            monster_locations.append((monster[0].x, monster[0].y))
+            monster_locations.append((monster.x, monster.y))
         return monster_locations
 
     def find_bomb(self,wrld):
         bomb_locations = []
         bombs = wrld.bombs.values()
         for bomb in bombs:
-            bomb_locations.append((bomb[0].x, bomb[0].y))
+            bomb_locations.append((bomb.x, bomb.y))
         return bomb_locations
 
     def look_for_empty_cell_character(self, wrld):
