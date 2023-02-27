@@ -79,6 +79,7 @@ class TestCharacter(CharacterEntity):
                 character_direction = np.array([0,0])
 
                 f_direction = 0
+                f_found_exit = 0
                 f_closest_to_exit = 0
                 cell_closest_to_exit = self.find_close_to_exit(wrld, action_position_x, action_position_y, exit_x, exit_y)
                 path_closest_to_exit = self.a_star(wrld,action_position_x, action_position_y, cell_closest_to_exit[0], cell_closest_to_exit[1])
@@ -87,6 +88,7 @@ class TestCharacter(CharacterEntity):
                 if(len(path_to_exit) > 0): # Currently using Unit Vectors
                     # character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
                     character_direction = np.array(path_to_exit[0]*len(path_to_exit))
+                    f_found_exit = 1
                     pass
                 else:
                     path_to_exit = [exit_x, exit_y]
@@ -121,7 +123,8 @@ class TestCharacter(CharacterEntity):
                     f_direction += 1/math.sqrt(np.dot(character_direction,character_direction))
                     # TODO : We probably need a down f and a right / left f maybe?
 
-                f_closest_to_exit = 2 * f_direction
+                f_closest_to_exit = 2 * f_direction * f_closest_to_exit
+                f_found_exit = 2 * f_direction * f_found_exit
                 """
                 For the f_direction, which is just the weight or something for the direction we want to go in
                 Dot product of the position we want to go to next, with the unit vector of the monster
@@ -165,6 +168,8 @@ class TestCharacter(CharacterEntity):
                 #     print("We should be incentivized to place a bomb")
                 f_values[i].append(moves[i][2])
                 f_values[i].append(f_closest_to_exit)
+                f_values[i].append(f_found_exit)
+
                 # f_values[i+3] = 1
 
                 q_sa[i] = self.q_function(f_values[i])
@@ -196,6 +201,7 @@ class TestCharacter(CharacterEntity):
                 character_direction
 
                 f_direction = 0
+                f_found_exit = 0
 
                 f_closest_to_exit = 0
                 cell_closest_to_exit = self.find_close_to_exit(wrld, action_position_x, action_position_y, exit_x,exit_y)
@@ -204,6 +210,7 @@ class TestCharacter(CharacterEntity):
                 if (len(path_to_exit) > 0):  # Currently using Unit Vectors
                     # character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
                     character_direction = np.array(path_to_exit[0]*len(path_to_exit))
+                    f_found_exit = 1
 
                 else:
                     path_to_exit = [exit_x, exit_y]
@@ -248,7 +255,8 @@ class TestCharacter(CharacterEntity):
                 if len(monsters_position) == 0:
                     f_direction += 1/math.sqrt(np.dot(character_direction,character_direction))
 
-                f_closest_to_exit = 2 * f_direction
+                f_closest_to_exit = 2 * f_direction * f_closest_to_exit
+                f_found_exit = 2 * f_direction * f_found_exit
                 # dist from bomb
                 # check if bomb is in play, if in play, calculate distance - bomb in play IF len(wrld.bombs.value()) > 0 probably? Gotta debug that
                 f_bomb_x = 0  # Large if close, small if far
@@ -283,6 +291,8 @@ class TestCharacter(CharacterEntity):
                 f_values_prime[j].append(f_bomb_y)
                 f_values_prime[j].append(moves[j][2])
                 f_values_prime[j].append(f_closest_to_exit)
+                f_values_prime[j].append(f_found_exit)
+
 
                 q_sa_prime[j] = self.q_function(f_values_prime[j])
 
@@ -308,7 +318,13 @@ class TestCharacter(CharacterEntity):
         if action[2] == 1:
             self.place_bomb()
         #print("Action Selected")
-        self.move(action[0] - self.x, action[1] - self.y)
+        neighbors = self.look_for_empty_cell_monster(wrld, self.x, self.y)
+        if (exit_x,exit_y) in neighbors:
+            print("I am here")
+            self.move(exit_x - self.x, exit_y - self.y)
+            print([exit_x, exit_y, self.x, self.y])
+        else:
+            self.move(action[0] - self.x, action[1] - self.y)
         print([action[0], action[1], action[2]])
         return action
 
@@ -440,6 +456,10 @@ class TestCharacter(CharacterEntity):
             path = list(reversed(path))
             return path # TODO :  We might need a try catch here if there is no path
         except:
+            neighbors = self.look_for_empty_cell_monster(wrld, startingx, startingx)
+            if goal in neighbors:
+                path.append(goal)
+                return goal
             return []
 
 
