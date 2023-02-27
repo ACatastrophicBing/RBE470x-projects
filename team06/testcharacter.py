@@ -36,11 +36,13 @@ class TestCharacter(CharacterEntity):
         List of Rewards Below
         """
         self.reward_win = 500
-        self.death = -500
+        self.death = -200
+        self.bomb_death = -500
         self.cost_of_living = -1
         self.wall_demo = 10
-        self.monster_kill = 50
+        self.monster_kill = 10
         self.character_kill = 100
+        self.place_bomb_reward = 1
 
     def do(self, wrld):
         self.q_learning(wrld)
@@ -333,52 +335,52 @@ class TestCharacter(CharacterEntity):
         return value
 
     def identify_rewards(self,wrld,next_position, bomb):
-        reward = -1 #cost of living
+        reward = self.cost_of_living #cost of living
         # If we predict our character dying (within range of monster or bomb has 1 left and either x and y distance from bomb is 0
         monsters_position = self.find_monsters(wrld)
 
         for monster in monsters_position:
             dist_to_monster = eights_distance(next_position[0],next_position[1],monster[0],monster[1])
             if dist_to_monster <= 1:
-                reward -= 500 # we committed Foisie jump
+                reward += self.death # we committed Foisie jump
 
         if bomb == 1:
-            reward += 1
+            reward += self.place_bomb_reward
 
         # If the bomb blows up and breaks a wall, add 10
         for bomb in self.find_bomb(wrld):
             for i in range(4):
                 if wrld.monsters_at(min(max(0,bomb[0] + i),wrld.width()-1),bomb[1]):
-                    reward += 50
+                    reward += self.monster_kill
                 if wrld.wall_at(min(max(0, bomb[0] + i), wrld.width()-1), bomb[1]):
-                    reward += 10
+                    reward += self.wall_demo
                 if next_position[0] == min(max(0, bomb[0] + i), wrld.width()-1) and next_position[1] == bomb[1]:
-                    reward -= 500
+                    reward += self.bomb_death
                 if wrld.monsters_at(min(max(0,bomb[0] - i),wrld.width()-1),bomb[1]):
-                    reward += 50
+                    reward += self.monster_kill
                 if wrld.wall_at(min(max(0, bomb[0] - i), wrld.width()-1), bomb[1]):
-                    reward += 100
+                    reward += self.wall_demo
                 if next_position[0] == min(max(0, bomb[0] - i), wrld.width()-1) and next_position[1] == bomb[1]:
-                    reward -= 500
+                    reward += self.bomb_death
                 if wrld.monsters_at(bomb[0],min(max(0,bomb[1] + i),wrld.height()-1)):
-                    reward += 50
+                    reward += self.monster_kill
                 if wrld.wall_at(bomb[0], min(max(0,bomb[1] + i),wrld.height()-1)):
-                    reward += 10
+                    reward += self.wall_demo
                 if next_position[1] == min(max(0, bomb[1] + i), wrld.height()-1) and next_position[0] == bomb[0]:
-                    reward -= 500
+                    reward += self.bomb_death
                 if wrld.monsters_at(bomb[0],min(max(0,bomb[1] - i),wrld.height()-1)):
-                    reward += 50
+                    reward += self.monster_kill
                 if wrld.wall_at(bomb[0], min(max(0,bomb[1] - i),wrld.height()-1)):
-                    reward += 10
+                    reward += self.bomb_death
                 if next_position[1] == min(max(0, bomb[1] - i), wrld.height()-1) and next_position[0] == bomb[0]:
-                    reward -= 500
+                    reward += self.bomb_death
         for explosion in self.find_explosions(wrld):
             if explosion[0] == next_position[0] and explosion[1] == next_position[1]:
-                reward -= 500
+                reward += self.bomb_death
 
         (exit, exit_x, exit_y) = self.find_exit(wrld)
         if next_position[0] == exit_x and next_position[1] == exit_y:
-            reward += 500
+            reward += self.reward_win
 
         return reward
 
