@@ -124,7 +124,7 @@ class TestCharacter(CharacterEntity):
 
 
                     # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
-                    f_monster_direction += np.dot(move_vector,monster_direction)
+                    f_monster_direction += .1 * np.dot(move_vector,monster_direction)
 
                 f_closest_to_exit = 2 * f_direction
                 """
@@ -170,6 +170,8 @@ class TestCharacter(CharacterEntity):
                 #     print("We should be incentivized to place a bomb")
                 f_values[i].append(moves[i][2])
                 f_values[i].append(f_monster_direction)
+                f_values[i].append(f_closest_to_exit)
+
                 # f_values[i+3] = 1
 
                 q_sa[i] = self.q_function(f_values[i])
@@ -280,6 +282,7 @@ class TestCharacter(CharacterEntity):
                 f_values_prime[j].append(f_bomb_x)
                 f_values_prime[j].append(f_bomb_y)
                 f_values_prime[j].append(moves[j][2])
+                f_values_prime[j].append(f_monster_direction)
                 f_values_prime[j].append(f_closest_to_exit)
 
                 q_sa_prime[j] = self.q_function(f_values_prime[j])
@@ -294,9 +297,9 @@ class TestCharacter(CharacterEntity):
         reward = self.identify_rewards(wrld,[action[0],action[1]],action[2])
         # print(reward)
         # TODO : Delta function here
-        print("Reward : %d" %reward)
-        print("max_q_sa : %f" % max_q_sa)
-        print("gamma q_sa_prime_max : %f" % (gamma*q_sa_prime_max))
+        # print("Reward : %d" %reward)
+        # print("max_q_sa : %f" % max_q_sa)
+        # print("gamma q_sa_prime_max : %f" % (gamma*q_sa_prime_max))
         delta = reward + gamma*q_sa_prime_max - max_q_sa
         print(delta)
         for i in range(len(f_values[index_best])):
