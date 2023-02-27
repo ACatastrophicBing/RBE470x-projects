@@ -21,7 +21,7 @@ def magnitude(vector):
 def manhattan_distance(startx,starty,targetx,targety):
     return abs(targetx - startx) + abs(targety - starty)
 
-def eights_distance(self, startx, starty, targetx, targety):
+def eights_distance(startx, starty, targetx, targety):
     return max(abs(targetx - startx), abs(targety - starty))
 
 moves = [[-1,-1,0],[-1,1,0],[1,-1,0],[1,1,0],[-1,0,0],[0,-1,0],[1,0,0],[0,1,0],[0,0,0],[0,0,1]]
@@ -120,11 +120,11 @@ class TestCharacter(CharacterEntity):
                         #there is path do something
                     # else:
                         # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
-                    monster_direction = np.array([monster[0] - action_position_x, monster[1] - action_position_y])
-                        #there is no path, panic
+                    monster_direction = np.array([monster[0] - action_position_x, monster[1] - action_position_y]) / math.sqrt((action_position_x - monster[0])**2 + (action_position_y - monster[1])**2 + 0.1)
+
 
                     # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
-                    f_monster_direction += 1/np.dot(move_vector,monster_direction)
+                    f_monster_direction += np.dot(move_vector,monster_direction)
 
                 f_closest_to_exit = 2 * f_direction
                 """
@@ -239,11 +239,11 @@ class TestCharacter(CharacterEntity):
                     # there is path do something
                     # else:
                     # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
-                    monster_direction = np.array([monster[0] - action_position_x, monster[1] - action_position_y])
+                    monster_direction = np.array([monster[0] - action_position_x, monster[1] - action_position_y]) / math.sqrt((action_position_x - monster[0])**2 + (action_position_y - monster[1])**2 + 0.1)
                     # there is no path, panic
 
                     # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
-                    f_monster_direction += 1 / math.sqrt(np.dot(move_vector, monster_direction))
+                    f_monster_direction += np.dot(move_vector, monster_direction)
 
                 f_closest_to_exit = 2 * f_direction
 
@@ -328,7 +328,7 @@ class TestCharacter(CharacterEntity):
         monsters_position = self.find_monsters(wrld)
 
         for monster in monsters_position:
-            dist_to_monster = self.eights_distance(next_position[0],next_position[1],monster[0],monster[1])
+            dist_to_monster = eights_distance(next_position[0],next_position[1],monster[0],monster[1])
             if dist_to_monster <= 1:
                 reward -= 500 # we committed Foisie jump
 
