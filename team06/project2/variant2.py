@@ -52,6 +52,7 @@ weights = read_from_csv()
 # Run!
 iterations = 1000
 for i in range(iterations):
+    weights = read_from_csv()
     lil_Johnny = TestCharacter("me", "C", 0, 0, weights)
     hWang = StupidMonster("stupid", "S", 3, 9)
     g = Game.fromfile('map.txt')
@@ -60,3 +61,4 @@ for i in range(iterations):
     g.go(1)
     print(lil_Johnny.weights)
     weights = lil_Johnny.weights
+    save_to_csv(weights)

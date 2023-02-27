@@ -50,7 +50,7 @@ class TestCharacter(CharacterEntity):
         pass
 
     def q_learning(self,wrld):
-        alpha = 0.25
+        alpha = 0.001
         gamma = 0.9
         num_actions = 10
         num_f = 4
