@@ -293,10 +293,8 @@ class TestCharacter(CharacterEntity):
         """
         And now here's our rewards
         """
-        reward = self.identify_rewards(wrld,[action[0],action[1]])
+        reward = self.identify_rewards(wrld,[action[0],action[1]],action[2])
         # print(reward)
-        if action[2] == 1:
-            reward += 20 # Rewards if the bomb gets placed because why the fuck not
         # TODO : Delta function here
         print("Reward : %d" %reward)
         print("max_q_sa : %f" % max_q_sa)
@@ -326,7 +324,7 @@ class TestCharacter(CharacterEntity):
 
         return value
 
-    def identify_rewards(self,wrld,next_position):
+    def identify_rewards(self,wrld,next_position, bomb):
         reward = -1 #cost of living
         # If we predict our character dying (within range of monster or bomb has 1 left and either x and y distance from bomb is 0
         monsters_position = self.find_monsters(wrld)
@@ -335,6 +333,9 @@ class TestCharacter(CharacterEntity):
             dist_to_monster = self.eights_distance(next_position[0],next_position[1],monster[0],monster[1])
             if dist_to_monster <= 1:
                 reward -= 500 # we committed Foisie jump
+
+        if bomb:
+            reward += 0.7
 
         # If the bomb blows up and breaks a wall, add 10
         for bomb in self.find_bomb(wrld):
