@@ -72,17 +72,24 @@ class TestCharacter(CharacterEntity):
             if action_position_x < 0 or action_position_y < 0 or action_position_x >= wrld.width() or action_position_y >= wrld.height():
                 continue
 
-            if wrld.empty_at(action_position_x, action_position_y) or wrld.characters_at(action_position_x, action_position_y) or wrld.explosion_at(action_position_x, action_position_y):
+            if wrld.empty_at(action_position_x, action_position_y) or wrld.characters_at(action_position_x, action_position_y) or wrld.explosion_at(action_position_x, action_position_y) or (exit_x == action_position_x and exit_y == action_position_y):
                 #calculate all the f values needed for q(s,a)
 
                 path_to_exit = self.a_star(wrld, action_position_x, action_position_y, exit_x, exit_y)
                 character_direction = np.array([0,0])
 
+                goal_neighbor = 0
                 f_direction = 0
                 f_found_exit = 0
                 f_closest_to_exit = 0
                 cell_closest_to_exit = self.find_close_to_exit(wrld, action_position_x, action_position_y, exit_x, exit_y)
                 path_closest_to_exit = self.a_star(wrld,action_position_x, action_position_y, cell_closest_to_exit[0], cell_closest_to_exit[1])
+
+                print([exit_x,exit_y,action_position_x, action_position_y])
+                if (exit_x == action_position_x and exit_y == action_position_y):
+                    print("why cant i win???")
+                    goal_neighbor = 1
+
 
                 # TODO : Pretty sure these lists CANNOT be multiplies / divided, so make them numpy arrays probably
                 if(len(path_to_exit) > 0): # Currently using Unit Vectors
@@ -96,9 +103,7 @@ class TestCharacter(CharacterEntity):
                     character_direction = np.array([path_to_exit[0] - action_position_x ,path_to_exit[1] - action_position_y])
                     if (action_position_x, action_position_y) in path_closest_to_exit:
                         f_closest_to_exit = 1
-                        print("AHHHHH")
-                        print(cell_closest_to_exit)
-                        print(exit_x, exit_y)
+
 
 
                     pass
@@ -124,7 +129,7 @@ class TestCharacter(CharacterEntity):
                     # TODO : We probably need a down f and a right / left f maybe?
 
                 f_closest_to_exit = 2 * f_direction * f_closest_to_exit
-                f_found_exit = 2 * f_direction * f_found_exit
+                f_found_exit = (2 * f_direction * f_found_exit) + (100 * goal_neighbor)
                 """
                 For the f_direction, which is just the weight or something for the direction we want to go in
                 Dot product of the position we want to go to next, with the unit vector of the monster
@@ -196,7 +201,7 @@ class TestCharacter(CharacterEntity):
                 continue
 
             # calculate all the f values needed for q(s,a)
-            if wrld.empty_at(s_prime_position_x, s_prime_position_y) or wrld.characters_at(s_prime_position_x, s_prime_position_y) or wrld.explosion_at(s_prime_position_x, s_prime_position_y):
+            if wrld.empty_at(s_prime_position_x, s_prime_position_y) or wrld.characters_at(s_prime_position_x, s_prime_position_y) or wrld.explosion_at(s_prime_position_x, s_prime_position_y) or (exit_x == action_position_x and exit_y == action_position_y):
                 path_to_exit = self.a_star(wrld, s_prime_position_x, s_prime_position_y, exit_x, exit_y)
                 character_direction
 
@@ -300,6 +305,7 @@ class TestCharacter(CharacterEntity):
         Now we maximize q_sa_prime
         """
         q_sa_prime_max = max(q_sa_prime)
+        print(q_sa)
         """
         And now here's our rewards
         """
@@ -318,13 +324,8 @@ class TestCharacter(CharacterEntity):
         if action[2] == 1:
             self.place_bomb()
         #print("Action Selected")
-        neighbors = self.look_for_empty_cell_monster(wrld, self.x, self.y)
-        if (exit_x,exit_y) in neighbors:
-            print("I am here")
-            self.move(exit_x - self.x, exit_y - self.y)
-            print([exit_x, exit_y, self.x, self.y])
-        else:
-            self.move(action[0] - self.x, action[1] - self.y)
+
+        self.move(action[0] - self.x, action[1] - self.y)
         print([action[0], action[1], action[2]])
         return action
 
