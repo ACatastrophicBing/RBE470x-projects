@@ -72,7 +72,7 @@ class TestCharacter(CharacterEntity):
             if action_position_x < 0 or action_position_y < 0 or action_position_x >= wrld.width() or action_position_y >= wrld.height():
                 continue
 
-            if wrld.empty_at(action_position_x, action_position_y) or wrld.characters_at(action_position_x, action_position_y):
+            if wrld.empty_at(action_position_x, action_position_y) or wrld.characters_at(action_position_x, action_position_y) or wrld.explosion_at(action_position_x, action_position_y):
                 #calculate all the f values needed for q(s,a)
 
                 path_to_exit = self.a_star(wrld, action_position_x, action_position_y, exit_x, exit_y)
@@ -102,12 +102,15 @@ class TestCharacter(CharacterEntity):
                         pass
                     else:
                         # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
-                        monster_direction = np.array([monster[0] - action_position_x, monster[1] - action_position_y])
+                        monster_direction = -np.array([monster[0] - action_position_x, monster[1] - action_position_y])
                         #there is no path, panic
                         pass
 
+                    print(monster_direction)
+                    print(character_direction)
+
                     # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
-                    f_direction += 1/math.sqrt(np.dot(character_direction,-monster_direction))
+                    f_direction += 1/math.sqrt(np.dot(character_direction,monster_direction))
                 if len(monsters_position) == 0:
                     f_direction += 1/math.sqrt(np.dot(character_direction,character_direction))
                     # TODO : We probably need a down f and a right / left f maybe?
@@ -145,8 +148,8 @@ class TestCharacter(CharacterEntity):
                 bombs = self.find_bomb(wrld)
                 if len(bombs) > 0:
                     for bomb in bombs:
-                        f_bomb_x += 1 / abs(action_position_x - bomb[0] + 0.1)
-                        f_bomb_y += 1 / abs(action_position_y - bomb[1] + 0.1)
+                        f_bomb_x += 1 / (abs(action_position_x - bomb[0]) + 0.1)
+                        f_bomb_y += 1 / (abs(action_position_y - bomb[1]) + 0.1)
 
                 # TODO : Copy above loop, but take into account the WORST (minimax) possible move the monster can make (Smallest A* to monster)
                 # Get max of inner for loop, and then get the delta with the max
@@ -178,11 +181,11 @@ class TestCharacter(CharacterEntity):
             s_prime_position_y = action[1] + moves[j][1]
             # print([wrld.width(), wrld.height(),s_prime_position_x, s_prime_position_y])
             if s_prime_position_x < 0 or s_prime_position_y < 0 or s_prime_position_x >= wrld.width() or s_prime_position_y >= wrld.height():
-                print("It doesn't think %d %d is a location we can go" % (s_prime_position_x,s_prime_position_y))
+                # print("It doesn't think %d %d is a location we can go" % (s_prime_position_x,s_prime_position_y))
                 continue
 
             # calculate all the f values needed for q(s,a)
-            if wrld.empty_at(s_prime_position_x, s_prime_position_y) or wrld.characters_at(s_prime_position_x, s_prime_position_y):
+            if wrld.empty_at(s_prime_position_x, s_prime_position_y) or wrld.characters_at(s_prime_position_x, s_prime_position_y) or wrld.explosion_at(s_prime_position_x, s_prime_position_y):
                 path_to_exit = self.a_star(wrld, s_prime_position_x, s_prime_position_y, exit_x, exit_y)
                 character_direction
 
@@ -238,11 +241,24 @@ class TestCharacter(CharacterEntity):
                 # check if bomb is in play, if in play, calculate distance - bomb in play IF len(wrld.bombs.value()) > 0 probably? Gotta debug that
                 f_bomb_x = 0  # Large if close, small if far
                 f_bomb_y = 0
-                if action[2] == 1:
-                    # TODO Pretend there's a bomb places
-                    bomb = [action[0],action[1]]
-                    f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.1)
-                    f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.1)
+                f_explosion = 0
+                # if action[2] == 1:
+                #     # TODO Pretend there's a bomb places
+                #     bomb = [action[0],action[1]]
+                #     f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.1)
+                #     f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.1)
+                    # """
+                    #                 If we are placing a bomb, we want to run away from the explosion
+                    #                 """
+                    # for k in range(4):
+                    #     f_explosion += 1 / math.sqrt(
+                    #         (s_prime_position_x - bomb[0] + k) ** 2 + (s_prime_position_y - bomb[1]) ** 2)
+                    #     f_explosion += 1 / math.sqrt(
+                    #         (s_prime_position_x - bomb[0] - k) ** 2 + (s_prime_position_y - bomb[1]) ** 2)
+                    #     f_explosion += 1 / math.sqrt(
+                    #         (s_prime_position_x - bomb[0]) ** 2 + (s_prime_position_y - bomb[1] + k) ** 2)
+                    #     f_explosion += 1 / math.sqrt(
+                    #         (s_prime_position_x - bomb[0]) ** 2 + (s_prime_position_y - bomb[1] - k) ** 2)
                 if len(bombs) > 0:
                     for bomb in bombs:
                         f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.1)
@@ -334,6 +350,9 @@ class TestCharacter(CharacterEntity):
                     reward += 10
                 if next_position[1] == min(max(0, bomb[1] - i), wrld.height()-1) and next_position[0] == bomb[0]:
                     reward -= 500
+        for explosion in self.find_explosions(wrld):
+            if explosion[0] == next_position[0] and explosion[1] == next_position[1]:
+                reward -= 500
 
         (exit, exit_x, exit_y) = self.find_exit(wrld)
         if next_position[0] == exit_x and next_position[1] == exit_y:
@@ -518,7 +537,7 @@ class TestCharacter(CharacterEntity):
         monster_locations = []
         monsters = wrld.monsters.values()
         for monster in monsters:
-            monster_locations.append((monster.x, monster.y))
+            monster_locations.append([monster[0].x, monster[0].y])
         return monster_locations
 
     def find_bomb(self,wrld):
@@ -527,6 +546,12 @@ class TestCharacter(CharacterEntity):
         for bomb in bombs:
             bomb_locations.append((bomb.x, bomb.y))
         return bomb_locations
+    def find_explosions(self,wrld):
+        explosion_locations = []
+        explosions = wrld.explosions.values()
+        for explosion in explosions:
+            explosion_locations.append((explosion.x, explosion.y))
+        return explosion_locations
 
     def look_for_empty_cell_character(self, wrld):
         # List of empty cells
