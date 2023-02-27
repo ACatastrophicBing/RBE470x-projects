@@ -18,11 +18,11 @@ def find_next(wrld):
 def magnitude(vector):
             return math.sqrt(sum(pow(element, 2) for element in vector))
 
-def manhattan_distance(self,startx,starty,targetx,targety):
-    return math.abs(targetx - startx) + math.abs(targety - starty)
+def manhattan_distance(startx,starty,targetx,targety):
+    return abs(targetx - startx) + abs(targety - starty)
 
 def eights_distance(self, startx, starty, targetx, targety):
-    return max(math.abs(targetx - startx), math.abs(targety - starty))
+    return max(abs(targetx - startx), abs(targety - starty))
 
 moves = [[-1,-1,0],[-1,1,0],[1,-1,0],[1,1,0],[-1,0,0],[0,-1,0],[1,0,0],[0,1,0],[0,0,0],[0,0,1]]
 
@@ -64,6 +64,22 @@ class TestCharacter(CharacterEntity):
 
         f_values = [[] for _ in range(num_actions)]
 
+        start_to_exit = self.a_star(wrld,self.x, self.y, exit_x, exit_y)
+        cell_to_exit = self.find_close_to_exit(wrld, self.x, self.y, exit_x,
+                                                       exit_y)  # TODO : Make this the path from the current location, and then take the dot product with the vector we want to use
+        start_to_cell = self.a_star(wrld, self.x, self.y, cell_to_exit[0],
+                                           cell_to_exit[1])
+
+        if len(start_to_exit) > 0: # TODO : Figure out if these are selecting the correct indices
+            next_cell = start_to_exit[1]
+            start_to_exit_vector = np.array([next_cell[0] - self.x, next_cell[1] - self.y]) / len(start_to_exit)
+        else:
+            try:
+                next_cell = start_to_cell[1]
+                start_to_exit_vector = np.array([next_cell[0] - self.x, next_cell[1] - self.y]) / len(cell_to_exit)
+            except: # Something went wrong
+                start_to_exit_vector = np.array([0,0])
+
         # start of q_sa
         for i in range(10): #calcualte q(s,a)
 
@@ -72,54 +88,43 @@ class TestCharacter(CharacterEntity):
             if action_position_x < 0 or action_position_y < 0 or action_position_x >= wrld.width() or action_position_y >= wrld.height():
                 continue
 
-            if wrld.empty_at(action_position_x, action_position_y) or wrld.characters_at(action_position_x, action_position_y) or wrld.explosion_at(action_position_x, action_position_y):
+            if wrld.empty_at(action_position_x, action_position_y) or wrld.characters_at(action_position_x, action_position_y) or wrld.explosion_at(action_position_x, action_position_y) or wrld.exit_at(action_position_x,action_position_y):
                 #calculate all the f values needed for q(s,a)
 
                 path_to_exit = self.a_star(wrld, action_position_x, action_position_y, exit_x, exit_y)
                 character_direction = np.array([0,0])
 
-                f_direction = 0
                 f_closest_to_exit = 0
-                cell_closest_to_exit = self.find_close_to_exit(wrld, action_position_x, action_position_y, exit_x, exit_y)
+                cell_closest_to_exit = self.find_close_to_exit(wrld, action_position_x, action_position_y, exit_x, exit_y) # TODO : Make this the path from the current location, and then take the dot product with the vector we want to use
                 path_closest_to_exit = self.a_star(wrld,action_position_x, action_position_y, cell_closest_to_exit[0], cell_closest_to_exit[1])
 
+                move_vector = np.array([moves[i][0], moves[i][1]])
+
+                f_direction = 0
                 # TODO : Pretty sure these lists CANNOT be multiplies / divided, so make them numpy arrays probably
                 if(len(path_to_exit) > 0): # Currently using Unit Vectors
                     # character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
-                    character_direction = np.array(path_to_exit[0]*len(path_to_exit))
-                    pass
+                    f_direction = np.dot(move_vector, start_to_exit_vector)/len(path_to_exit)
+                    move_vector *= len(path_to_exit)
                 else:
-                    path_to_exit = [exit_x, exit_y]
-                    # character_direction = np.array([action_position_x - path_to_exit[0],action_position_y - path_to_exit[1]]) / math.sqrt((action_position_x - path_to_exit[0])^2 + (action_position_y - path_to_exit[1])^2)
-                    character_direction = np.array([path_to_exit[0] - action_position_x ,path_to_exit[1] - action_position_y])
-                    if (action_position_x, action_position_y) in path_closest_to_exit:
-                        f_closest_to_exit = 1
-                        print("AHHHHH")
-                        print(cell_closest_to_exit)
-                        print(exit_x, exit_y)
+                    f_direction = np.dot(move_vector, start_to_exit_vector)/len(path_closest_to_exit)
+                    move_vector *= len(path_closest_to_exit)
 
-
-                    pass
-
+                f_monster_direction = 0
                 monster_direction = np.array([0,0])
                 for monster in monsters_position:
-                    path_to_mon = self.a_star(wrld, monster[0], monster[1], exit_x, exit_y)
-                    if(len(path_to_mon) > 0):
+                    # path_to_mon = self.a_star(wrld, monster[0], monster[1], exit_x, exit_y)
+                    # if(len(path_to_mon) > 0):
                         # monster_direction = np.array(path_to_mon[0]) / magnitude(np.array(path_to_mon[0]))
-                        monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
+                        # monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
                         #there is path do something
-                        pass
-                    else:
+                    # else:
                         # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
-                        monster_direction = -np.array([monster[0] - action_position_x, monster[1] - action_position_y])
+                    monster_direction = np.array([monster[0] - action_position_x, monster[1] - action_position_y])
                         #there is no path, panic
-                        pass
 
                     # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
-                    f_direction += 1/math.sqrt(np.dot(character_direction,monster_direction))
-                if len(monsters_position) == 0:
-                    f_direction += 1/math.sqrt(np.dot(character_direction,character_direction))
-                    # TODO : We probably need a down f and a right / left f maybe?
+                    f_monster_direction += 1/np.dot(move_vector,monster_direction)
 
                 f_closest_to_exit = 2 * f_direction
                 """
@@ -164,7 +169,7 @@ class TestCharacter(CharacterEntity):
                 # if moves[i][2] == 1:
                 #     print("We should be incentivized to place a bomb")
                 f_values[i].append(moves[i][2])
-                f_values[i].append(f_closest_to_exit)
+                f_values[i].append(f_monster_direction)
                 # f_values[i+3] = 1
 
                 q_sa[i] = self.q_function(f_values[i])
@@ -182,6 +187,26 @@ class TestCharacter(CharacterEntity):
         q_sa_prime = [-1000000 for _ in range(num_actions)]
         f_values_prime = [[] for _ in range(num_actions)]
 
+        start_to_exit = self.a_star(wrld, action[0], action[1], exit_x, exit_y)
+        cell_to_exit = self.find_close_to_exit(wrld, action[0], action[1], exit_x,
+                                               exit_y)  # TODO : Make this the path from the current location, and then take the dot product with the vector we want to use
+        start_to_cell = self.a_star(wrld, action[0], action[1], cell_to_exit[0],
+                                    cell_to_exit[1])
+
+        if len(start_to_exit) > 0:  # TODO : Figure out if these are selecting the correct indices
+            try:
+                next_cell = start_to_exit[1]
+                start_to_exit_vector = np.array([next_cell[0] - action[0], next_cell[1] - action[1]]) / len(start_to_exit)
+            except: # We are at the finish line so we don't need a q_sa_prime, but we are still going to run it
+                next_cell = start_to_exit[0]
+                start_to_exit_vector = np.array([next_cell[0] - action[0], next_cell[1] - action[1]])
+        else:
+            try:
+                next_cell = start_to_cell[1]
+                start_to_exit_vector = np.array([next_cell[0] - action[0], next_cell[1] - action[1]]) / len(cell_to_exit)
+            except: # Problems happened, we might have been blocked off by an explosion
+                start_to_exit_vector = np.array([0,0])
+
         for j in range(10):  # calcualte q(s_prime,a_prime)
             s_prime_position_x = action[0] + moves[j][0]
             s_prime_position_y = action[1] + moves[j][1]
@@ -192,63 +217,36 @@ class TestCharacter(CharacterEntity):
 
             # calculate all the f values needed for q(s,a)
             if wrld.empty_at(s_prime_position_x, s_prime_position_y) or wrld.characters_at(s_prime_position_x, s_prime_position_y) or wrld.explosion_at(s_prime_position_x, s_prime_position_y):
-                path_to_exit = self.a_star(wrld, s_prime_position_x, s_prime_position_y, exit_x, exit_y)
-                character_direction
 
                 f_direction = 0
-
-                f_closest_to_exit = 0
-                cell_closest_to_exit = self.find_close_to_exit(wrld, action_position_x, action_position_y, exit_x,exit_y)
-                path_closest_to_exit = self.a_star(wrld, action_position_x, action_position_y, cell_closest_to_exit[0], cell_closest_to_exit[1])
-
+                move_vector = np.array([moves[i][0], moves[i][1]])
+                # TODO : Pretty sure these lists CANNOT be multiplies / divided, so make them numpy arrays probably
                 if (len(path_to_exit) > 0):  # Currently using Unit Vectors
                     # character_direction = np.array(path_to_exit[0]) / magnitude(np.array(path_to_exit[0]))
-                    character_direction = np.array(path_to_exit[0]*len(path_to_exit))
-
+                    f_direction = np.dot(move_vector, start_to_exit_vector) / len(path_to_exit)
+                    move_vector *= len(path_to_exit)
                 else:
-                    path_to_exit = [exit_x, exit_y]
-                    # character_direction = np.array(
-                    #     [s_prime_position_x - path_to_exit[0], s_prime_position_y - path_to_exit[1]]) / math.sqrt(
-                    #     (s_prime_position_x - path_to_exit[0]) ^ 2 + (s_prime_position_y - path_to_exit[1]) ^ 2)
-                    character_direction = np.array([path_to_exit[0] - s_prime_position_x, path_to_exit[1] - s_prime_position_y])
-                    if (action_position_x, action_position_y) in path_closest_to_exit:
-                        f_closest_to_exit = 1
+                    f_direction = np.dot(move_vector , start_to_exit_vector) / len(path_closest_to_exit)
+                    move_vector *= len(path_closest_to_exit)
 
-                    pass
-
-                monster_direction
-                # probability_moves = [[]] * len(monsters_position)
+                f_monster_direction = 0
+                monster_direction = np.array([0, 0])
                 for monster in monsters_position:
-                    worst_move = [monster[0],monster[1]] # For us
-                    min_dist = 100
-                    monster_moves = self.look_for_empty_cell_monster(wrld, monster[0], monster[1])
-                    for move in monster_moves:  # 1 / len(monster_moves)
-                        man_monster_dist = self.manhattan_distance(s_prime_position_x,s_prime_position_y,move[0],move[1])
-                        if man_monster_dist < min_dist:
-                            min_dist = man_monster_dist
-                            worst_move = [move[0],move[1]]
-                        # probability_moves[monsters_position.index(monster)].append((1 / len(monster_moves), move[0], move[1])) # Do we need this?
+                    # path_to_mon = self.a_star(wrld, monster[0], monster[1], exit_x, exit_y)
+                    # if(len(path_to_mon) > 0):
+                    # monster_direction = np.array(path_to_mon[0]) / magnitude(np.array(path_to_mon[0]))
+                    # monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
+                    # there is path do something
+                    # else:
+                    # monster_direction = np.array([action_position_x - monster[0],action_position_y - monster[1]]) / math.sqrt((action_position_x - monster[0])^2 + (action_position_y - monster[1])^2)
+                    monster_direction = np.array([monster[0] - action_position_x, monster[1] - action_position_y])
+                    # there is no path, panic
 
-                    path_to_mon = self.a_star(wrld, worst_move[0], worst_move[1], exit_x, exit_y)
-                    if (len(path_to_mon) > 0):
-                        # monster_direction = np.array(path_to_mon[0]) / magnitude(np.array(path_to_mon[0]))
-                        monster_direction = np.array(path_to_mon[0] * len(path_to_mon))
-                        # there is path do something
-                    else:
-                        # monster_direction = np.array(
-                        #     [s_prime_position_x - worst_move[0], s_prime_position_y - worst_move[1]]) / math.sqrt(
-                        #     (s_prime_position_x - worst_move[0]) ^ 2 + (s_prime_position_y - worst_move[1]) ^ 2)
-                        monster_direction = np.array([monster[0] - s_prime_position_x,monster[1] - s_prime_position_y])
-                        # there is no path, panic
-
-
-                    f_direction += 1/math.sqrt(np.dot(character_direction, -monster_direction))
-
-                # if there are no monsters
-                if len(monsters_position) == 0:
-                    f_direction += 1/math.sqrt(np.dot(character_direction,character_direction))
+                    # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
+                    f_monster_direction += 1 / math.sqrt(np.dot(move_vector, monster_direction))
 
                 f_closest_to_exit = 2 * f_direction
+
                 # dist from bomb
                 # check if bomb is in play, if in play, calculate distance - bomb in play IF len(wrld.bombs.value()) > 0 probably? Gotta debug that
                 f_bomb_x = 0  # Large if close, small if far
@@ -333,9 +331,6 @@ class TestCharacter(CharacterEntity):
             dist_to_monster = self.eights_distance(next_position[0],next_position[1],monster[0],monster[1])
             if dist_to_monster <= 1:
                 reward -= 500 # we committed Foisie jump
-
-        if bomb:
-            reward += 0.7
 
         # If the bomb blows up and breaks a wall, add 10
         for bomb in self.find_bomb(wrld):
