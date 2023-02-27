@@ -1,0 +1,61 @@
+Actions
+place_bomb # Unsure how this will be used, probably multiplied by closeness to monster? f_distance_from_monster or f_euclidian_dist_from_monster?
+
+# Might have an array for this, or will just be a multiplicative factor?
+move_x # weight of moving -1, 0, +1 in x
+move_y # weight of moving -1, 0, +1 in y
+# Might also just be an array of 9, and we'll still be multiplying by the next A* step (or at least how close we get to it next)
+# Will be multiplied by the vertical, horizontala distance from goal, and probably also the A* distance from goal? - f_move, f_distance_from_goal, etc
+
+States f_i, need correlating w_i for each of the f's
+# We will have an array of size 9 to select which move we can do?
+# These w's start as 1?
+f_move # each of our moves percentage chance, so if we are up against a wall its a 0 chance - euclidian distance from best A* move
+
+# These w's would be positive (+2)
+f_distance_from_goal # manhattan distance from goal (1 / distance)
+f_distance_goal_A* # nonzero if it exists (1 / distance)
+# These last two might also be the next step torwards goal given by A*?
+
+# These w's would be negative, lets say start as double to distance from goal? (-4)
+# Multiple monsters means below will have to be a list probably, and each instance of monster also warrants the possible actions they can take as well?
+f_distance_from_monster # manhattan distance from monster (1 / distance)
+f_distance_from_monster # A* from monster, nonzero if we can hit the monster (1 / distance)
+
+# These w's would also be negative
+f_distance_from_bomb_x # Vertical distance from closest bomb explosion in the x
+f_distance_from_bomb_y # Horizontal distance from closest bomb explosion in the y
+# These will probably be multiplied by 1 / (how long until the bomb explodes)
+
+Rewards
+-1 cost of living (We don't)
+-500 for dying
++10 for destroying a wall
++50 for destroying a monster
++500 for reaching goal
++10000000 if one of us dies
+
+Definition of Q(s,a)
+Q(s,a) = sum_i^n(f_i(s,a)*w_i)
+Then we need to update each weight, only updating every weight who's action correlates (everything except for the moves not taken)
+delta = r + gamma * max(best Q(s,a) out of the moves we can take in the next state using expectimax or minimax?) - current Q(s,a)
+wi = wi + alpha * delta * f(s,a) # and delta would include all possible monster moves divided by the number of moves the monster can make
+# Mimic the deterministic move the monster can make depending on if its in range or not
+
+Gamma = 0.9
+Alpha - 0.25
+
+
+Pseudo c o d e
+
+for 1000 iterations
+	learn
+	die
+	reset map
+	repeats
+
+
+Choosing the best action to take based of Q(s,a) function, so max(Q(s,a))
+
+
+
