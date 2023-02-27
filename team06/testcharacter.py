@@ -3,6 +3,7 @@ import sys
 import numpy as np
 from queue import PriorityQueue
 import math
+import time
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
@@ -43,6 +44,7 @@ class TestCharacter(CharacterEntity):
 
     def do(self, wrld):
         self.q_learning(wrld)
+        time.sleep(0.1)
         pass
 
     def q_learning(self,wrld):
@@ -143,8 +145,8 @@ class TestCharacter(CharacterEntity):
                 bombs = self.find_bomb(wrld)
                 if len(bombs) > 0:
                     for bomb in bombs:
-                        f_bomb_x += 1 / abs(action_position_x - bomb[0] + 0.001)
-                        f_bomb_y += 1 / abs(action_position_y - bomb[1] + 0.001)
+                        f_bomb_x += 1 / abs(action_position_x - bomb[0] + 0.1)
+                        f_bomb_y += 1 / abs(action_position_y - bomb[1] + 0.1)
 
                 # TODO : Copy above loop, but take into account the WORST (minimax) possible move the monster can make (Smallest A* to monster)
                 # Get max of inner for loop, and then get the delta with the max
@@ -176,6 +178,7 @@ class TestCharacter(CharacterEntity):
             s_prime_position_y = action[1] + moves[j][1]
             # print([wrld.width(), wrld.height(),s_prime_position_x, s_prime_position_y])
             if s_prime_position_x < 0 or s_prime_position_y < 0 or s_prime_position_x >= wrld.width() or s_prime_position_y >= wrld.height():
+                print("It doesn't think %d %d is a location we can go" % (s_prime_position_x,s_prime_position_y))
                 continue
 
             # calculate all the f values needed for q(s,a)
@@ -238,12 +241,12 @@ class TestCharacter(CharacterEntity):
                 if action[2] == 1:
                     # TODO Pretend there's a bomb places
                     bomb = [action[0],action[1]]
-                    f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.001)
-                    f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.001)
+                    f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.1)
+                    f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.1)
                 if len(bombs) > 0:
                     for bomb in bombs:
-                        f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.001)
-                        f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.001)
+                        f_bomb_x += 1 / abs(s_prime_position_x - bomb[0] + 0.1)
+                        f_bomb_y += 1 / abs(s_prime_position_y - bomb[1] + 0.1)
 
 
                 # TODO : Copy above loop, but take into account the WORST (minimax) possible move the monster can make (Smallest A* to monster)
@@ -252,7 +255,7 @@ class TestCharacter(CharacterEntity):
                 f_values_prime[j].append(f_bomb_y)
                 f_values_prime[j].append(moves[j][2])
 
-                q_sa_prime[i] = self.q_function(f_values_prime[j])
+                q_sa_prime[j] = self.q_function(f_values_prime[j])
 
         """
         Now we maximize q_sa_prime
@@ -266,18 +269,20 @@ class TestCharacter(CharacterEntity):
         if action[2] == 1:
             reward += 20 # Rewards if the bomb gets placed because why the fuck not
         # TODO : Delta function here
+        print("Reward : %d" %reward)
+        print("max_q_sa : %f" % max_q_sa)
+        print("gamma q_sa_prime_max : %f" % (gamma*q_sa_prime_max))
         delta = reward + gamma*q_sa_prime_max - max_q_sa
-        # print(delta)
+        print(delta)
         for i in range(len(f_values[index_best])):
             self.weights[i] += alpha*delta*f_values[index_best][i] #update the weights
 
         print(self.weights)
         if action[2] == 1:
             self.place_bomb()
-            return action
         #print("Action Selected")
         self.move(action[0] - self.x, action[1] - self.y)
-        print([action[0], action[1]])
+        print([action[0], action[1], action[2]])
         return action
 
     def weight_delta(self):
