@@ -39,7 +39,7 @@ class TestCharacter(CharacterEntity):
         self.death = -200
         self.bomb_death = -500
         self.cost_of_living = -1
-        self.wall_demo = 10
+        self.wall_demo = 50
         self.monster_kill = 10
         self.character_kill = 100
         self.place_bomb_reward = 1
@@ -313,6 +313,10 @@ class TestCharacter(CharacterEntity):
         print(delta)
         for i in range(len(f_values[index_best])):
             self.weights[i] += alpha*delta*f_values[index_best][i] #update the weights
+            if i == 3 and self.weights[i] < 1:
+                self.weights[i] = 1
+            if i == 5 and self.weights[i] < -10:
+                self.weights[i] = 0
 
         print(self.weights)
         if action[2] == 1:
