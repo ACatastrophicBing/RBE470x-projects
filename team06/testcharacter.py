@@ -48,7 +48,7 @@ class TestCharacter(CharacterEntity):
         pass
 
     def q_learning(self,wrld):
-        alpha = 0.1
+        alpha = 0.25
         gamma = 0.9
         num_actions = 10
         num_f = 4
@@ -109,6 +109,7 @@ class TestCharacter(CharacterEntity):
                 else:
                     f_direction = np.dot(move_vector, start_to_exit_vector)/len(path_closest_to_exit)
                     move_vector *= len(path_closest_to_exit)
+                    f_closest_to_exit = 1
 
                 f_monster_direction = 0
                 monster_direction = np.array([0,0])
@@ -126,7 +127,10 @@ class TestCharacter(CharacterEntity):
                     # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
                     f_monster_direction += .1 * np.dot(move_vector,monster_direction)
 
-                f_closest_to_exit = 2 * f_direction
+                f_closest_to_exit = 2 * f_direction * f_closest_to_exit
+                f_monster_direction = f_monster_direction * len(monsters_position)
+                print(f_monster_direction)
+
                 """
                 For the f_direction, which is just the weight or something for the direction we want to go in
                 Dot product of the position we want to go to next, with the unit vector of the monster
@@ -179,7 +183,8 @@ class TestCharacter(CharacterEntity):
                 actions[i] = [action_position_x,action_position_y,place_bomb]
                 """
                 Have q_sa
-                We now want q_sa_prime
+                             f_monster_direction = f_monster_direction * len(monsters_position)
+   We now want q_sa_prime
                 """
 
         # Now we have selected our action, so update the weights based on the rewards and q_sa_prime_max for that action
@@ -230,6 +235,7 @@ class TestCharacter(CharacterEntity):
                 else:
                     f_direction = np.dot(move_vector , start_to_exit_vector) / len(path_closest_to_exit)
                     move_vector *= len(path_closest_to_exit)
+                    f_closest_to_exit = 1
 
                 f_monster_direction = 0
                 monster_direction = np.array([0, 0])
@@ -247,7 +253,8 @@ class TestCharacter(CharacterEntity):
                     # TODO : Right here is where we dot product character_direction*(-monster_direction) # monster erection
                     f_monster_direction += np.dot(move_vector, monster_direction)
 
-                f_closest_to_exit = 2 * f_direction
+
+                f_closest_to_exit = 2 * f_direction * f_closest_to_exit
 
                 # dist from bomb
                 # check if bomb is in play, if in play, calculate distance - bomb in play IF len(wrld.bombs.value()) > 0 probably? Gotta debug that
@@ -350,7 +357,7 @@ class TestCharacter(CharacterEntity):
                 if wrld.monsters_at(min(max(0,bomb[0] - i),wrld.width()-1),bomb[1]):
                     reward += 50
                 if wrld.wall_at(min(max(0, bomb[0] - i), wrld.width()-1), bomb[1]):
-                    reward += 10
+                    reward += 100
                 if next_position[0] == min(max(0, bomb[0] - i), wrld.width()-1) and next_position[1] == bomb[1]:
                     reward -= 500
                 if wrld.monsters_at(bomb[0],min(max(0,bomb[1] + i),wrld.height()-1)):
