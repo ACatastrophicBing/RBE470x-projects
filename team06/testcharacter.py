@@ -332,6 +332,9 @@ class TestCharacter(CharacterEntity):
             if dist_to_monster <= 1:
                 reward -= 500 # we committed Foisie jump
 
+        if bomb == 1:
+            reward += 1
+
         # If the bomb blows up and breaks a wall, add 10
         for bomb in self.find_bomb(wrld):
             for i in range(4):
