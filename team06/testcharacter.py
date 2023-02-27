@@ -310,29 +310,29 @@ class TestCharacter(CharacterEntity):
         # If the bomb blows up and breaks a wall, add 10
         for bomb in self.find_bomb(wrld):
             for i in range(4):
-                if wrld.monsters_at(min(max(0,bomb[0] + i),wrld.width()),bomb[1]):
+                if wrld.monsters_at(min(max(0,bomb[0] + i),wrld.width()-1),bomb[1]):
                     reward += 50
-                if wrld.wall_at(min(max(0, bomb[0] + i), wrld.width()), bomb[1]):
+                if wrld.wall_at(min(max(0, bomb[0] + i), wrld.width()-1), bomb[1]):
                     reward += 10
-                if next_position[0] == min(max(0, bomb[0] + i), wrld.width()) and next_position[1] == bomb[1]:
+                if next_position[0] == min(max(0, bomb[0] + i), wrld.width()-1) and next_position[1] == bomb[1]:
                     reward -= 500
-                if wrld.monsters_at(min(max(0,bomb[0] - i),wrld.width()),bomb[1]):
+                if wrld.monsters_at(min(max(0,bomb[0] - i),wrld.width()-1),bomb[1]):
                     reward += 50
-                if wrld.wall_at(min(max(0, bomb[0] - i), wrld.width()), bomb[1]):
+                if wrld.wall_at(min(max(0, bomb[0] - i), wrld.width()-1), bomb[1]):
                     reward += 10
-                if next_position[0] == min(max(0, bomb[0] - i), wrld.width()) and next_position[1] == bomb[1]:
+                if next_position[0] == min(max(0, bomb[0] - i), wrld.width()-1) and next_position[1] == bomb[1]:
                     reward -= 500
-                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] + i),wrld.height())):
+                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] + i),wrld.height()-1)):
                     reward += 50
-                if wrld.wall_at(bomb[0], min(max(0,bomb[1] + i),wrld.height())):
+                if wrld.wall_at(bomb[0], min(max(0,bomb[1] + i),wrld.height()-1)):
                     reward += 10
-                if next_position[1] == min(max(0, bomb[1] + i), wrld.height()) and next_position[0] == bomb[0]:
+                if next_position[1] == min(max(0, bomb[1] + i), wrld.height()-1) and next_position[0] == bomb[0]:
                     reward -= 500
-                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] - i),wrld.height())):
+                if wrld.monsters_at(bomb[0],min(max(0,bomb[1] - i),wrld.height()-1)):
                     reward += 50
-                if wrld.wall_at(bomb[0], min(max(0,bomb[1] - i),wrld.height())):
+                if wrld.wall_at(bomb[0], min(max(0,bomb[1] - i),wrld.height()-1)):
                     reward += 10
-                if next_position[1] == min(max(0, bomb[1] - i), wrld.height()) and next_position[0] == bomb[0]:
+                if next_position[1] == min(max(0, bomb[1] - i), wrld.height()-1) and next_position[0] == bomb[0]:
                     reward -= 500
 
         (exit, exit_x, exit_y) = self.find_exit(wrld)
